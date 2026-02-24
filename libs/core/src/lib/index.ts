@@ -1,3 +1,5 @@
+import "reflect-metadata"
+
 export * from './lang';
 export * from './util';
 export * from './validation';
