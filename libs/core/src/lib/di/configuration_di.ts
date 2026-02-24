@@ -13,7 +13,7 @@ export class ConfigValue {
 }
 
 export function config(key: string, defaultValue?: any): ParameterDecorator {
-  return (target: Object, propertyKey: string | symbol | undefined, parameterIndex: number) => {
+  return (target: object, propertyKey: string | symbol | undefined, parameterIndex: number) => {
     const clazz  = propertyKey == null ? target as any : (target as any).constructor;
     const metaKey = propertyKey == null ? `param:${parameterIndex}` : `${String(propertyKey)}:param:${parameterIndex}`;
 

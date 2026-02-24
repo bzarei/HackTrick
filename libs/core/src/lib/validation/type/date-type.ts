@@ -5,12 +5,6 @@ import type {ConstraintInfo} from "./type"
  * this constraint class adds specific checks for dates.
  */
 export class DateType extends Type<Date> {
-    // static block
-
-    static {
-
-    }
-
     // constructor
 
     constructor(name?: string) {

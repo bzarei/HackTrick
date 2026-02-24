@@ -3,7 +3,9 @@ import 'reflect-metadata';
 
 // Dummy decorator — needed for metadata to be emitted
 function dummy(): MethodDecorator & PropertyDecorator & ClassDecorator {
-  return () => {};
+  return () => {
+      // noop
+  };
 }
 
 @dummy()

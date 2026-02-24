@@ -13,9 +13,9 @@ import { Environment, injectable, Module, module } from "../di"
       enabled: true,
       trace: new ConsoleTrace('%d [%p]: %m\n'), // %f
       paths: {
-        aop: TraceLevel.FULL,
-        di: TraceLevel.FULL,
-        application: TraceLevel.FULL,
+        aop: TraceLevel.OFF,
+        di: TraceLevel.OFF,
+        application: TraceLevel.OFF,
         form: TraceLevel.OFF,
       },
 });

@@ -87,7 +87,7 @@ export const Constraint = (): MethodDecorator => {
 export class Type<T> {
     // static data
 
-    static cache: { } = {}
+    static cache = {}
     private static factories = new Map<string, TypeRegistryDescriptor>();
     private static patches: Patch[] = [];
     private static timeout = false
@@ -143,20 +143,20 @@ export class Type<T> {
         const entry = this.factories.get(typeName);
         if (!entry) throw new Error(`Unknown type: ${typeName}`);
 
-        const instance = new entry.typeClass();
+        const instance : any = new entry.typeClass();
 
         if (constraints) {
             for (const [name, value] of Object.entries(constraints)) {
-                // @ts-ignore
+
                 if (typeof instance[name] !== "function") {
                     throw new Error(`Unknown constraint: ${name}`);
                 }
 
                 if (value === true) {
-                    // @ts-ignore
+
                     instance[name]();
-                } else {
-                    // @ts-ignore
+                }
+                else {
                     instance[name](value);
                 }
             }

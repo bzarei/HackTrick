@@ -21,9 +21,9 @@ import { ConsoleTrace, TraceLevel, Tracer } from '../tracer';
       enabled: true,
       trace: new ConsoleTrace('%d [%p]: %m\n'), // %f
       paths: {
-        aop: TraceLevel.FULL,
-        di: TraceLevel.FULL,
-        application: TraceLevel.FULL,
+        aop: TraceLevel.OFF,
+        di: TraceLevel.OFF,
+        application: TraceLevel.OFF,
         form: TraceLevel.OFF,
       },
 });
@@ -87,7 +87,7 @@ class Bar extends Base {
     super.running()
   }
 
-   @onRunning()
+  @onRunning()
   running1() {
         console.log("runn");
     }
