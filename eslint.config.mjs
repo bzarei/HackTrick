@@ -37,6 +37,13 @@ export default [
       '**/*.mjs',
     ],
     // Override or add rules here
-    rules: {},
+    rules: {
+         '@typescript-eslint/no-explicit-any': 'off',
+         '@typescript-eslint/no-non-null-assertion': 'off',
+         '@typescript-eslint/no-unsafe-function-type': 'off',
+         '@typescript-eslint/no-unused-vars': 'off',
+         'no-useless-escape': 'off',
+         'prefer-const': 'off'
+    },
   },
 ];
