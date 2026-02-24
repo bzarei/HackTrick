@@ -1,6 +1,6 @@
 {
   "name": "@novx/core",
-  "version": "0.0.2-3",
+  "version": "0.0.2-4",
   "type": "module",
   "main": "dist/libs/core/index.js",
   "module": "dist/libs/core/index.esm.js",
