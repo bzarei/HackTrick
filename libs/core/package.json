@@ -1,0 +1,28 @@
+{
+  "name": "@novx/core",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "dist/libs/core/index.js",
+  "module": "dist/libs/core/index.esm.js",
+  "types": "dist/libs/core/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/libs/core/index.esm.js",
+      "require": "./dist/libs/core/index.js",
+      "types": "./dist/libs/core/index.d.ts",
+      "default": "./dist/libs/core/index.esm.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "nx build core",
+    "test": "nx test core",
+    "lint": "nx lint core"
+  },
+  "files": [
+    "dist/libs/core",
+    "!**/*.tsbuildinfo"
+  ],
+  "dependencies": {},
+  "devDependencies": {}
+}

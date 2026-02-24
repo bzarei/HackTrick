@@ -1,0 +1,88 @@
+import {Type, Constraint} from "./type"
+import type {ConstraintInfo} from "./type"
+
+/**
+ * this constraint class adds specific checks for dates.
+ */
+export class DateType extends Type<Date> {
+    // static block
+
+    static {
+
+    }
+
+    // constructor
+
+    constructor(name?: string) {
+        super(name)
+
+        this.test({
+            type: "date",
+            name: "type",
+            params: {
+                type: "date",
+            },
+            break: true,
+            check(object: Date): boolean {
+                return typeof object == "object" && object.constructor.name === "Date"
+            },
+        })
+    }
+
+    // fluent
+
+    @Constraint()
+    min(min: Date, info?: ConstraintInfo): DateType {
+        this.test({
+            type: "number",
+            name: "min",
+            params: {
+                min: min,
+            },
+            ...info,
+            check(object: Date): boolean {
+                return object >= min
+            },
+        })
+
+        return this
+    }
+
+    @Constraint()
+    max(max: Date, info?: ConstraintInfo): DateType {
+        this.test({
+            type: "number",
+            name: "max",
+            params: {
+                max: max,
+            },
+            ...info,
+            check(object: Date): boolean {
+                return object <= max
+            },
+        })
+
+        return this
+    }
+
+    @Constraint()
+    format(format: string, info?: ConstraintInfo): DateType {
+        this.test({
+            type: "date",
+            name: "format",
+            params: {
+                format: format,
+            },
+            ...info,
+            check(object: Date): boolean {
+                return true // TODO add...
+            },
+        })
+
+        return this
+    }
+}
+
+ Type.registerFactory("date", DateType);
+
+export const date = (name?: string) => new DateType(name)
