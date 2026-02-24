@@ -5,6 +5,12 @@
   "sourceRoot": "libs/core/src",
   "projectType": "library",
   "targets": {
+    "docs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "typedoc"
+      }
+    },
     "build": {
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],

@@ -1,0 +1,10 @@
+{
+  "entryPoints": ["libs/core/src/index.ts"],
+  "tsconfig": "libs/core/tsconfig.lib.json",
+  "out": "dist/docs/core",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "readme": "none",
+  "plugin": []
+}
