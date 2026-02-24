@@ -1,10 +1,13 @@
 {
   "name": "@novx/core",
-  "version": "0.0.2-1",
+  "version": "0.0.2-3",
   "type": "module",
   "main": "dist/libs/core/index.js",
   "module": "dist/libs/core/index.esm.js",
   "types": "dist/libs/core/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "import": "./dist/libs/core/index.esm.js",
