@@ -3,10 +3,11 @@ name: Publish
 on:
   push:
     tags:
-      - 'v*'   # triggers only when you push version tags like v1.0.0
+      - 'v*'   # triggers only on version tags like v0.0.3
 
 permissions:
   contents: read
+  packages: write   # required for npm publish
 
 jobs:
   publish:
@@ -21,6 +22,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npm publish
+      # Navigate to the library folder
+      - run: cd libs/core && npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
