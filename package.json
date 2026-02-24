@@ -1,7 +1,6 @@
 {
   "name": "my-monorepo",
   "version": "0.0.4",
-  "private": true,
   "license": "MIT",
   "workspaces": [
     "libs/*"
