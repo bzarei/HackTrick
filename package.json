@@ -39,6 +39,7 @@
     "typescript-eslint": "^8.40.0"
   },
   "dependencies": {
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
   }
 }
