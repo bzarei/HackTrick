@@ -1558,10 +1558,6 @@ export class Environment {
     // local function
 
     const filterProvider = (provider: AbstractInstanceProvider<any>): boolean => {
-      // if we already have a provider, forget it????? TODO what about cycles??
-      //if (this.providers.has(provider.getType()))
-      //  return false;
-
       return accepts.has(provider.getModule())
     };
 
@@ -1741,10 +1737,6 @@ export class Environment {
 
     if (!provider) {
       const typeName = type?.name || 'unknown';
-
-      // TODO
-
-      console.log(this.report())
 
       throw new DIRuntimeException(`${typeName} is not supported`);
     }

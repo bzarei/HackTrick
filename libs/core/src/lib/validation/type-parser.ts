@@ -33,7 +33,7 @@ type TypeMap = { [type: string]: SupportedKeywords }
  //  mapping of generated keywords to fluent methods
 
 const typeMap: TypeMap = {
-    // TODO: does that work?
+    // does that work?
     ref: {
 
     },

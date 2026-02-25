@@ -183,13 +183,6 @@ export class Type<T> {
         return constraint
     }
 
-    /*static valueOf(type: string) : Type<any> {
-        const lowLevelType = type.split(" ")[0]
-        type = type.substring(lowLevelType.length + 1) // TODO
-
-        return TypeParser.parse(lowLevelType, type)
-    }*/
-
     private static resolve() {
         let patch;
         while ((patch = this.patches.shift()))
