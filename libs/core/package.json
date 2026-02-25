@@ -1,6 +1,16 @@
 {
   "name": "@novx/core",
   "version": "0.0.10",
+  "description": "di and aop library",
+  "homepage": "https://github.com/coolsamson7/novx",
+  "repository": {
+    "type": "git,",
+    "url": "https://github.com/coolsamson7/novx"
+  },
+  "bugs": {
+    "url": "https://github.com/coolsamson7/novx/issues"
+  },
+  "licence": "Apache",
   "type": "module",
   "main": "dist/core/index.js",
   "module": "dist/core/index.esm.js",
