@@ -8,8 +8,8 @@ import {
   onDestroy,
   inject,
   create,
-  module,
   config,
+  module,
   Module,
   
 } from './index';
@@ -209,8 +209,6 @@ const createEnvironment = async () => {
 
 
 describe('Dependency Injection', () => {
-  //it('should support scopes', () => {});
-
   let environment : Environment;
 
   // lifecycle

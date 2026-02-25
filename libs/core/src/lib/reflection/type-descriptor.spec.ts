@@ -5,12 +5,12 @@ import { TypeDescriptor } from "./type-descriptor"
 import { ConsoleTrace, TraceLevel, Tracer } from "../tracer"
 
 new Tracer({
-        enabled: true,
-        trace: new ConsoleTrace("%d [%p]: %m\n"), // d(ate), l(evel), p(ath), m(message)
-        paths: {
-            type: TraceLevel.FULL,
-        },
-    });
+    enabled: false,
+    trace: new ConsoleTrace("%d [%p]: %m\n"), // d(ate), l(evel), p(ath), m(message)
+    paths: {
+        type: TraceLevel.FULL,
+    },
+});
 
 
 const typeDecorator = (): any => {
@@ -19,8 +19,7 @@ const typeDecorator = (): any => {
     }
 }
 const methodDecorator = function (test: string): any {
- 
-    return (target: any, property: string, descriptor: PropertyDescriptor) => {
+    return (target: any, property: string, _descriptor: PropertyDescriptor) => {
         TypeDescriptor.forType(target.constructor).addMethodDecorator(target, property, methodDecorator, test)
     }
 }
@@ -32,13 +31,11 @@ const propertyDecorator = (): any => {
 }
 
 class Base {
-      @propertyDecorator()
+    @propertyDecorator()
     base = ""
 
- @methodDecorator("test")
- f() {
-     // noop
- }
+    @methodDecorator("test")
+    f() {}
 }
 
 @typeDecorator()
@@ -48,42 +45,54 @@ class Test extends Base {
 
     @methodDecorator("test")
     async foo(message: string): Promise<string> {
-        return Promise.resolve("")
+        return Promise.resolve(message)
     }
     @methodDecorator("test")
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    bar(): void {}
+    bar(): void {
+        // noope
+    }
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     baz(): Promise<number> {
         return Promise.resolve<number>(1)
     }
 }
 
 describe("TypeDescriptor", () => {
-
     it("should analyze", () => {
         const descriptor = TypeDescriptor.forType(Test)
+
+        //console.log(descriptor)
+
+        // descriptor
 
         expect(descriptor.decorators.length).toBe(1)
         expect(descriptor.decorators[0].decorator).toBe(typeDecorator)
 
-        //expect(descriptor.getMethods().length).toBe(3)
+        // property descriptor
 
-        const foo = descriptor.getMethod("foo")!
+        const fooDescriptor = descriptor.getMethod("foo")!
 
-        expect(foo.decorators.length).toBe(1)
-        //TODO expect(foo.decorators[0].decorator).toBe(methodDecorator)
-        expect(foo.async).toBe(true)
+        expect(fooDescriptor.decorators.length).toBe(1)
+        expect(fooDescriptor.decorators[0].decorator).toBe(methodDecorator)
+        expect(fooDescriptor.async).toBe(true)
 
-        expect(descriptor.getProperties().length).toBe(1)
+        // field descriptor
 
-        //expect(descriptor.getField("id")?.decorators.length).toBe(1)
-        //expect(descriptor.getField("id")?.decorators[0]).toBe(propertyDecorator)
+        const idDescriptor = descriptor.getField("id")!
 
-        //
+        expect(idDescriptor.decorators.length).toBe(1)
+        expect(idDescriptor.decorators[0].decorator).toBe(propertyDecorator)
 
-        const baz = descriptor.getMethod("baz")!
-        //expect(baz.async).toBe(true)
+        // methods
+
+        const methods = descriptor.getMethods()
+
+        expect(methods.length).toBe(4)
+
+        // properties
+
+        const properties = descriptor.getProperties()
+
+        expect(properties.length).toBe(1)
     })
 })

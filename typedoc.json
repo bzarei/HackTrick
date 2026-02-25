@@ -1,5 +1,7 @@
 {
-  "entryPoints": ["libs/core/src/index.ts"],
+  "entryPoints": [
+    "libs/core/src/index.ts"
+  ],
   "tsconfig": "libs/core/tsconfig.lib.json",
   "out": "dist/docs/core",
   "excludePrivate": true,

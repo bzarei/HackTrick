@@ -27,9 +27,7 @@ describe("query", () => {
             .filter(price => price.value > 0)
             .collect(Collectors.toArray())
 
-        console.log(result)
-
-       //expect(result.length).toBe(3)
+       expect(result.length).toBe(4)
     })
 
     it("should work", () => {
@@ -49,15 +47,11 @@ describe("query", () => {
             .sort()
             .collect(Collectors.toArray())
 
-        console.log(result)
-
-        //expect(result.length).toBe(4)
+        expect(result.length).toBe(3)
 
         const sum =  Stream.of(collection)
             .filter(price => price.value > 0)
             .reduce((total: number, price: Price) => total + price.value, 0);
-
-        console.log(result)
 
         expect(sum).toBe(7)
     })

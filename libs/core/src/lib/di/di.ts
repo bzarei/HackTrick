@@ -1729,6 +1729,10 @@ export class Environment {
     this.instances = [];
   }
 
+  supports(type: new(...args: any[]) => any) : boolean {
+      return this.providers.get(type as any) !== undefined
+  }
+
   /**
    * Get an instance of the specified type
    */
@@ -1737,6 +1741,10 @@ export class Environment {
 
     if (!provider) {
       const typeName = type?.name || 'unknown';
+
+      // TODO
+
+      console.log(this.report())
 
       throw new DIRuntimeException(`${typeName} is not supported`);
     }

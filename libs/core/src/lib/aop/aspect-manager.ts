@@ -118,7 +118,10 @@ export class AspectManager {
     }
 
     private static matchingAspects(processor: AdviceProcessor, typeDescriptor: TypeDescriptor<any>, originalMethod: MethodDescriptor, type: AspectType): Aspect[] {
+        const environment = processor.environment!
         return this.aspects
+            // only advices that are known to the environment!
+            .filter((aspect) => environment.supports((aspect as AdviceAspect).adviceInstance))
             .filter((aspect) =>
                 aspect.type == type && aspect.matches(typeDescriptor, originalMethod, AspectManager.accept))
             .sort((a, b) => {

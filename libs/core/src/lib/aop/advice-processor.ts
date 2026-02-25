@@ -1,11 +1,10 @@
-import { Environment, inject, injectable, PostProcessor } from "../di";
+import { Environment, injectable, PostProcessor } from "../di";
 import { AdviceAspect } from "./aspect/";
 
 import { Aspect } from "./aspect";
 import { AspectInfo, AspectManager } from "./aspect-manager";
 
 @injectable({module: "boot", scope: "environment"})
-
 export class AdviceProcessor extends PostProcessor {
     // instance data
 
@@ -13,8 +12,8 @@ export class AdviceProcessor extends PostProcessor {
     aspects : Map<Aspect, Aspect> = new Map()
     environment: Environment | undefined = undefined;
 
-    @inject()
-    setEnvironment(environment: Environment) {
+    constructor(environment: Environment) {
+        super()
         this.environment = environment;
     }
 
@@ -49,6 +48,7 @@ export class AdviceProcessor extends PostProcessor {
 
     override process(instance: any, environment: Environment): void {
         this.environment = environment;
-        AspectManager.wrapMethods(this, instance.constructor, instance)
+        if ( instance.constructor !== AdviceProcessor)
+            AspectManager.wrapMethods(this, instance.constructor, instance)
     }
 }

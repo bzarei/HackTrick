@@ -1,16 +1,16 @@
 {
   "compilerOptions": {
-     "declaration": true,
+    "declaration": true,
     "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "downlevelIteration": true,
-
     "baseUrl": ".",
     "paths": {
       "@novx/core": ["libs/core/src/index.ts"]
     },
     "rootDir": ".",
     "sourceMap": true,
-
+    "inlineSources": true,
     "composite": true,
     "declarationMap": true,
     "emitDeclarationOnly": true,

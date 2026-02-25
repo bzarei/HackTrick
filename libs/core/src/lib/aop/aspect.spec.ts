@@ -10,14 +10,12 @@ import { AspectType } from "./aspect-type.enum"
 import { Environment, injectable, Module, module } from "../di"
 
  new Tracer({
-      enabled: true,
-      trace: new ConsoleTrace('%d [%p]: %m\n'), // %f
-      paths: {
+    enabled: true,
+    trace: new ConsoleTrace('%d [%p]: %m\n'), // %f
+    paths: {
         aop: TraceLevel.OFF,
         di: TraceLevel.OFF,
-        application: TraceLevel.OFF,
-        form: TraceLevel.OFF,
-      },
+    },
 });
 
 @injectable()
@@ -43,7 +41,7 @@ class TestClass {
 class TestModule extends Module {
 }
 
-@injectable({scope: "singleton"})
+@injectable()
 class Aspects {
     message = "aspect"
 
@@ -58,15 +56,6 @@ class Aspects {
         this.nBefore++
         console.log("before(" + invocation.method().name + ")")
     }
-
-    /*@aspect({
-        type: AspectType.AROUND,
-        order: 0,
-        target: methods().named("sync"),
-    })
-    conditionalBefore(invocation: Invocation): any {
-        //
-    }*/
 
     @aspect({
         type: AspectType.AROUND,
@@ -129,6 +118,7 @@ describe("aspects", () => {
    
     beforeEach(() => {
         environment = new Environment({module: TestModule})
+
         aspect = environment.get(Aspects)
     })
 
