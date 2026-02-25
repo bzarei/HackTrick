@@ -104,7 +104,7 @@ export class Type<T> {
             console.warn(`Type '${typeName}' not found in factories`);
             return [];
         }
-        console.log(`Getting constraints for '${typeName}':`, type.constraints.map(c => c.name));
+
         return type.constraints;
     }
 

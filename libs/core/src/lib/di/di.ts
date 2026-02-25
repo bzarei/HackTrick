@@ -1166,9 +1166,6 @@ export class FunctionInstanceProvider<T> extends InstanceProvider<T> {
     scope = 'singleton',
   ) {
     super(module, clazz, returnType, eager, scope);
-
-    if ( this.host.name == "MFE1Module")
-      console.log("jjj")
   }
 
   private initParamProviders(): void {

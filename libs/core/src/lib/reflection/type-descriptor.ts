@@ -128,7 +128,7 @@ export interface Decorator<T = any> {
     decorate(type: TypeDescriptor<T>, instance: T): void
 }
 
-console.log("########### TypeDescriptor");
+
 
 export class TypeDescriptor<T> {
     // Static factory
