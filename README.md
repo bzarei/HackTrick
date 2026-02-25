@@ -8,3 +8,6 @@ NOVX is a monorepo covering a number of Typescripr and React solutions in indivi
 
 - [Core DI Solution]([https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects](https://github.com/coolsamson7/novx/tree/main/libs/core)) a typescript dependency injection and aspect solution 
   
+## API Docs
+
+- http://ernstandreas.de/novx/
