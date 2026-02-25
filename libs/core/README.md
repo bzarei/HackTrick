@@ -1,6 +1,11 @@
-# core
+# Novx Core
 
-This library was generated with [Nx](https://nx.dev).
+As part of the Novx Monorepo, Core provides basic infrastructural elements, which are
+- a dependency injection solution
+- an integrated aop solution
+- handling of configuration values
+- error handling
+- tracing
 
 ## Building
 
