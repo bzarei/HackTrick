@@ -35,7 +35,9 @@ class Base {
     base = ""
 
     @methodDecorator("test")
-    f() {}
+    f() {
+        // noop
+    }
 }
 
 @typeDecorator()
