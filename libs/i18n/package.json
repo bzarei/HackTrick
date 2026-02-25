@@ -1,0 +1,42 @@
+{
+  "name": "@novx/i18n",
+  "version": "0.0.10",
+  "description": "i18n library",
+  "homepage": "https://github.com/coolsamson7/novx",
+  "repository": {
+    "type": "git,",
+    "url": "https://github.com/coolsamson7/novx"
+  },
+  "bugs": {
+    "url": "https://github.com/coolsamson7/novx/issues"
+  },
+  "licence": "Apache",
+  "type": "module",
+  "main": "dist/i18n/index.js",
+  "module": "dist/i18n/index.esm.js",
+  "types": "dist/i18n/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/i18n/index.esm.js",
+      "require": "./dist/i18n/index.js",
+      "types": "./dist/i18n/index.d.ts",
+      "default": "./dist/i18n/index.esm.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "nx build i18n",
+    "prepare": "npm run build && rm -rf dist/i18n && cp -r ../../dist/libs/i18n dist/i18n",
+    "test": "nx test i18n",
+    "lint": "nx lint i18n"
+  },
+  "files": [
+    "dist/i18n",
+    "!**/*.tsbuildinfo"
+  ],
+  "dependencies": {},
+  "devDependencies": {}
+}

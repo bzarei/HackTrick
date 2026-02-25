@@ -1,0 +1,40 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "communication",
+  "root": "libs/communication",
+  "sourceRoot": "libs/communication/src",
+  "projectType": "library",
+  "targets": {
+    "docs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "typedoc"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/communication",
+        "tsConfig": "libs/communication/tsconfig.lib.json",
+        "packageJson": "libs/communication/package.json",
+        "main": "libs/communication/src/index.ts",
+        "assets": ["libs/communication/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["libs/communication/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/communication"],
+      "options": {
+        "jestConfig": "libs/communication/jest.config.cts",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

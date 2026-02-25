@@ -6,11 +6,14 @@
     "downlevelIteration": true,
     "baseUrl": ".",
     "paths": {
-      "@novx/core": ["libs/core/src/index.ts"]
+      "@novx/core": ["libs/core/src/index.ts"],
+      "@novx/i18n": ["libs/i18n/src/index.ts"],
+      "@novx/communication": ["libs/communication/src/index.ts"],
+      "@novx/portal": ["libs/portal/src/index.ts"]
     },
     "rootDir": ".",
     "sourceMap": true,
-    "inlineSources": true,
+
     "composite": true,
     "declarationMap": true,
     "emitDeclarationOnly": true,

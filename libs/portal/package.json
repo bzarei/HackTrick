@@ -1,0 +1,42 @@
+{
+  "name": "@novx/portal",
+  "version": "0.0.10",
+  "description": "di and aop library",
+  "homepage": "https://github.com/coolsamson7/novx",
+  "repository": {
+    "type": "git,",
+    "url": "https://github.com/coolsamson7/novx"
+  },
+  "bugs": {
+    "url": "https://github.com/coolsamson7/novx/issues"
+  },
+  "licence": "Apache",
+  "type": "module",
+  "main": "dist/portal/index.js",
+  "module": "dist/portal/index.esm.js",
+  "types": "dist/portal/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/portal/index.esm.js",
+      "require": "./dist/portal/index.js",
+      "types": "./dist/portal/index.d.ts",
+      "default": "./dist/portal/index.esm.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "nx build portal",
+    "prepare": "npm run build && rm -rf dist/portal && cp -r ../../dist/libs/portal dist/portal",
+    "test": "nx test portal",
+    "lint": "nx lint portal"
+  },
+  "files": [
+    "dist/portal",
+    "!**/*.tsbuildinfo"
+  ],
+  "dependencies": {},
+  "devDependencies": {}
+}

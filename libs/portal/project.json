@@ -1,0 +1,40 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "portal",
+  "root": "libs/portal",
+  "sourceRoot": "libs/portal/src",
+  "projectType": "library",
+  "targets": {
+    "docs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "typedoc"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/portal",
+        "tsConfig": "libs/portal/tsconfig.lib.json",
+        "packageJson": "libs/portal/package.json",
+        "main": "libs/portal/src/index.ts",
+        "assets": ["libs/portal/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["libs/portal/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/portal"],
+      "options": {
+        "jestConfig": "libs/portal/jest.config.cts",
+        "passWithNoTests": true
+      }
+    }
+  }
+}
