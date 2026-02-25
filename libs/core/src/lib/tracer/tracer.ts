@@ -29,7 +29,7 @@ export class Tracer {
         return Tracer.This
     }
 
-    public static Trace(path: string, level: TraceLevel, message: string, ...args: any[]) {
+    public static async Trace(path: string, level: TraceLevel, message: string, ...args: any[]) {
         const instance = Tracer.getSingleton()
 
         if ( instance.getTraceLevel(path) >= level) {
@@ -39,7 +39,7 @@ export class Tracer {
 
             const lastFrame = frames[1]
 
-            instance.trace(path, level, message, lastFrame, ...args)
+            await instance.trace(path, level, message, lastFrame, ...args).catch(console.error)
         }
     }
 

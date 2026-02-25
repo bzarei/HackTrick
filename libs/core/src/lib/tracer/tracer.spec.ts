@@ -25,8 +25,11 @@ class TestTrace extends Trace {
         this.traceEntry = entry
     }
 }
+
+const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0))
+
 describe("Tracer", () => {
-    it("should trace", () => {
+    it("should trace", async () => {
         const trace = new TestTrace()
         const tracer = new Tracer({
             enabled: true,
@@ -37,31 +40,31 @@ describe("Tracer", () => {
             },
         })
 
-        Tracer.Trace("not-enabled", TraceLevel.FULL, "hello world")
+        await Tracer.Trace("not-enabled", TraceLevel.FULL, "hello world")
 
         expect(trace.traceEntry).toBeUndefined()
 
         trace.traceEntry = undefined
 
-        Tracer.Trace("com", TraceLevel.LOW, "hello world")
+        await Tracer.Trace("com", TraceLevel.LOW, "hello world")
 
         expect(trace.traceEntry).toBeDefined()
 
         trace.traceEntry = undefined
 
-        Tracer.Trace("com", TraceLevel.FULL, "hello world")
+        await Tracer.Trace("com", TraceLevel.FULL, "hello world")
 
         expect(trace.traceEntry).toBeUndefined()
 
         trace.traceEntry = undefined
 
-        Tracer.Trace("com.bar", TraceLevel.HIGH, "hello world")
+        await Tracer.Trace("com.bar", TraceLevel.HIGH, "hello world")
 
         expect(trace.traceEntry).toBeDefined()
 
         trace.traceEntry = undefined
 
-        Tracer.Trace("com.foo", TraceLevel.HIGH, "hello world")
+        await Tracer.Trace("com.foo", TraceLevel.HIGH, "hello world")
 
         expect(trace.traceEntry).toBeDefined()
 

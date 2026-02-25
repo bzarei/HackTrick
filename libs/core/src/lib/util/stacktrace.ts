@@ -93,93 +93,12 @@ class GeckoParser implements Parser {
   }
 }
 
-/*
-class WinJSParser implements Parser {
-  // instance data
-
-   winjsRe = /^\s*at (?:((?:\[object object\])?.+) )?\(?((?:file|ms-appx|https?|webpack|blob):.*?):(\d+)(?::(\d+))?\)?\s*$/i;
-
-  // implement Parser
-
-  parse(line: string) : StackFrame | null {
-
-    const parts = this.winjsRe.exec(line);
-
-    if (!parts)
-      return null;
-
-
-    return {
-      file: parts[2],
-      methodName: parts[1] || UNKNOWN_FUNCTION,
-      arguments: [],
-      lineNumber: +parts[3],
-      column: parts[4] ? +parts[4] : null,
-    };
-  }
-}
-
-class JSCParser implements Parser {
-  // instance data
-
-  const javaScriptCoreRe = /^\s*(?:([^@]*)(?:\((.*?)\))?@)?(\S.*?):(\d+)(?::(\d+))?\s*$/i;
-
-
-  // implement Parser
-
-  parse(line: string) : StackFrame | null {
-
-    const parts = this.javaScriptCoreRe.exec(line);
-
-    if (!parts)
-      return null;
-
-
-    return {
-      file: parts[3],
-      methodName: parts[1] || UNKNOWN_FUNCTION,
-      arguments: [],
-      lineNumber: +parts[4],
-      column: parts[5] ? +parts[5] : null,
-    };
-  }
-}
-
-class NodeParser implements Parser {
-  // instance data
-
-   nodeRe = /^\s*at (?:((?:\[object object\])?[^\\/]+(?: \[as \S+\])?) )?\(?(.*?):(\d+)(?::(\d+))?\)?\s*$/i;
-
-
-  // implement Parser
-
-  parse(line: string) : StackFrame | null {
-
-    const parts = this.nodeRe.exec(line);
-
-    if (!parts)
-      return null;
-
-
-    return {
-      file: parts[2],
-      methodName: parts[1] || UNKNOWN_FUNCTION,
-      arguments: [],
-      lineNumber: +parts[3],
-      column: parts[4] ? +parts[4] : null,
-    };
-  }
-}*/
 
 function determineParser(): Parser {
   // Check if running in Node.js environment
   if (typeof navigator === 'undefined' || typeof process !== 'undefined' && process.versions && process.versions.node) {
-    // Use a simple parser for Node.js
-    return {
-      parse(line) {
-        return null
-      }
-    }
+    // Node uses V8, same stack format as Chrome
+    return new ChromeParser()
   }
 
   if (navigator.userAgent.toLowerCase().indexOf('chrome') > -1)
@@ -209,6 +128,30 @@ export class Stacktrace {
   // public
 
   static async mapFrames(...frames: StackFrame[]): Promise<StackFrame[]> {
+    const isNode = typeof window === 'undefined';
+
+    if (isNode) {
+      for (const frame of frames) {
+        if (!frame.file) continue;
+
+        if (!this.consumer[frame.file]) {
+          await this.loadSourcemapNode(frame.file);
+        }
+
+        if (this.consumer[frame.file] && frame.lineNumber) {
+          const pos = this.consumer[frame.file].originalPositionFor({
+            line: frame.lineNumber!,
+            column: frame.column!,
+          });
+          frame.file = pos.source;
+          frame.lineNumber = pos.line;
+          frame.column = pos.column;
+        }
+      }
+
+      return frames;
+    }
+
     const files: { [file: string]: boolean } = {}
     for (const frame of frames)
       if (frame.file && frame.file!.includes(":"))
@@ -257,6 +200,32 @@ export class Stacktrace {
   }
 
   // private
+
+  private static async loadSourcemapNode(filePath: string): Promise<void> {
+    try {
+      const fs = await import('fs');
+      const content = fs.readFileSync(filePath, 'utf-8');
+
+      // inline source map
+      const inlineMatch = RegExp(/\/\/# sourceMappingURL=data:application\/json;base64,(.*)/).exec(content);
+      if (inlineMatch) {
+        const mapContent = JSON.parse(Buffer.from(inlineMatch[1], 'base64').toString());
+        this.consumer[filePath] = new SourceMapConsumer(mapContent);
+        return;
+      }
+
+      // external source map file
+      const fileMatch = RegExp(/\/\/# sourceMappingURL=(.*)/).exec(content);
+      if (fileMatch) {
+        const path = await import('path');
+        const mapPath = path.resolve(path.dirname(filePath), fileMatch[1]);
+        const mapContent = JSON.parse(fs.readFileSync(mapPath, 'utf-8'));
+        this.consumer[filePath] = new SourceMapConsumer(mapContent);
+      }
+    } catch (e) {
+      // file not readable or no source map
+    }
+  }
 
   private static loadSourcemap(uri: string): Observable<SourceMapConsumer> {
     const uriQuery = new URL(uri).search;
