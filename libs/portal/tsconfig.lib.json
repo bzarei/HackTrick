@@ -2,6 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react-jsx",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "composite": true,
     "declaration": true,
     "rootDir": "src",
@@ -14,11 +16,7 @@
     "moduleResolution": "node"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "references": [
-    {"path": "../core"},
-    {"path": "../communication"},
-    {"path": "../i18n"}
-  ],
+
   "exclude": [
     "jest.config.ts",
     "jest.config.cts",
