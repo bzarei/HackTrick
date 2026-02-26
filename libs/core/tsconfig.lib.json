@@ -9,7 +9,8 @@
     "tsBuildInfoFile": "dist/libs/core/tsconfig.lib.tsbuildinfo",
     "module": "esnext",
     "target": "es2022",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "strict": true
   },
   "include": ["src/**/*.ts"],
   "exclude": [
