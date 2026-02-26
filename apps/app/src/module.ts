@@ -95,7 +95,7 @@ export class NoAuthenticationService implements AuthenticationService {
 // tracing
 
 new Tracer({
-  enabled: true,
+  enabled: false,
   trace: new ConsoleTrace('%d [%p]: %m %f\n'), // %f
   paths: {
     application: TraceLevel.FULL,
@@ -154,14 +154,14 @@ export class ApplicationModule extends AbstractModule {
 
   @create()
   createDeploymentLoader(portalService: PortalService) : DeploymentLoader {
-    let load = 'nix';
+    let load = 'remote';
 
     if (load == 'service')
       return new ServiceDeploymentLoader(portalService);
 
     else if (load == 'remote')
       return new RemoteDeploymentLoader([
-        { name: 'mfe1', url: 'http://localhost:3001' },
+        { name: 'microfrontend', url: 'http://localhost:3001' },
       ]);
 
       else return new EmptyDeploymentLoader()

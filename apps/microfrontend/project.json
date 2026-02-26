@@ -24,22 +24,22 @@
     "serve": {
       "executor": "@nx/webpack:dev-server",
       "options": {
-        "buildTarget": "app:build",
+        "buildTarget": "microfrontend:build",
         "host": "localhost",
-        "port": 4200
+        "port": 3001
       }
     },
     "lint": {
       "executor": "@nx/eslint:eslint",
       "options": {
-        "lintFilePatterns": ["apps/app/**/*.ts", "apps/app/**/*.tsx"]
+        "lintFilePatterns": ["apps/microfrontend/**/*.ts", "apps/microfrontend/**/*.tsx"]
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/apps/app"],
+      "outputs": ["{workspaceRoot}/coverage/apps/microfrontend"],
       "options": {
-        "jestConfig": "apps/app/jest.config.ts",
+        "jestConfig": "apps/microfrontend/jest.config.ts",
         "passWithNoTests": true
       }
     }
