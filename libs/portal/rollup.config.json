@@ -1,0 +1,11 @@
+{
+  "main": "./src/index.ts",
+  "outputPath": "./dist/libs/portal",
+  "tsConfig": "./tsconfig.lib.json",
+  "compiler": "ts",
+  "format": ["esm"],
+  "output": {
+    "preserveModules": true,
+    "preserveModulesRoot": "src"
+  }
+}

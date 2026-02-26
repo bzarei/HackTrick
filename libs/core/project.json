@@ -6,14 +6,12 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:swc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "@nx/rollup:rollup",
       "options": {
         "outputPath": "dist/libs/core",
         "tsConfig": "libs/core/tsconfig.lib.json",
-        "packageJson": "libs/core/package.json",
-        "main": "libs/core/src/index.ts",
-        "assets": ["libs/core/*.md"]
+        "project": "libs/core/rollup.config.json",
+        "main": "libs/core/src/index.ts"
       }
     },
     "build:types": {
@@ -21,7 +19,9 @@
       "options": {
         "tsConfig": "libs/core/tsconfig.lib.json",
         "emitDeclarationOnly": true,
-        "outDir": "dist/libs/core"
+        "outDir": "dist/libs/core",
+        "outputPath": "dist/libs/core",
+        "main": "dist/libs/core/index.js"
       }
     },
     "test": {

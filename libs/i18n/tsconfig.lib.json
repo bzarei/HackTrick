@@ -7,6 +7,9 @@
     "rootDir": "src",
     "outDir": "dist/libs/i18n",
     "tsBuildInfoFile": "dist//libs/i18n/tsconfig.lib.tsbuildinfo",
+    "module": "esnext",
+    "target": "es2022",
+    "moduleResolution": "node"
   },
   "include": ["src/**/*.ts"],
   "references": [

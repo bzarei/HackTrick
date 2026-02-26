@@ -6,25 +6,23 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:swc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "@nx/rollup:rollup",
       "options": {
         "outputPath": "dist/libs/communication",
         "tsConfig": "libs/communication/tsconfig.lib.json",
-        "packageJson": "libs/communication/package.json",
-        "main": "libs/communication/src/index.ts",
-        "assets": ["libs/communication/*.md"]
-      },
-      "dependsOn": ["^build"]
+        "project": "libs/communication/rollup.config.json",
+        "main": "libs/communication/src/index.ts"
+      }
     },
     "build:types": {
       "executor": "@nx/js:tsc",
       "options": {
         "tsConfig": "libs/communication/tsconfig.lib.json",
         "emitDeclarationOnly": true,
-        "outDir": "dist/libs/communication"
-      },
-      "dependsOn": ["^build:types"]
+        "outDir": "dist/libs/communication",
+        "outputPath": "dist/libs/communication",
+        "main": "dist/libs/communication/index.js"
+      }
     },
     "test": {
       "executor": "@nx/jest:jest",

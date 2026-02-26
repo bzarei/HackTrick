@@ -6,14 +6,12 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:swc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "@nx/rollup:rollup",
       "options": {
         "outputPath": "dist/libs/portal",
         "tsConfig": "libs/portal/tsconfig.lib.json",
-        "packageJson": "libs/portal/package.json",
-        "main": "libs/portal/src/index.ts",
-        "assets": ["libs/portal/*.md"]
+        "project": "libs/portal/rollup.config.json",
+        "main": "libs/portal/src/index.ts"
       },
       "dependsOn": ["^build"]
     },
@@ -22,7 +20,9 @@
       "options": {
         "tsConfig": "libs/portal/tsconfig.lib.json",
         "emitDeclarationOnly": true,
-        "outDir": "dist/libs/portal"
+        "outDir": "dist/libs/portal",
+        "outputPath": "dist/libs/portal",
+        "main": "dist/libs/portal/index.js"
       },
       "dependsOn": ["^build:types"]
     },

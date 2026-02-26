@@ -6,25 +6,23 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nx/js:swc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "@nx/rollup:rollup",
       "options": {
         "outputPath": "dist/libs/i18n",
         "tsConfig": "libs/i18n/tsconfig.lib.json",
-        "packageJson": "libs/i18n/package.json",
-        "main": "libs/i18n/src/index.ts",
-        "assets": ["libs/i18n/*.md"]
-      },
-      "dependsOn": ["^build"]
+        "project": "libs/i18n/rollup.config.json",
+        "main": "libs/i18n/src/index.ts"
+      }
     },
     "build:types": {
       "executor": "@nx/js:tsc",
       "options": {
         "tsConfig": "libs/i18n/tsconfig.lib.json",
         "emitDeclarationOnly": true,
-        "outDir": "dist/libs/i18n"
-      },
-      "dependsOn": ["^build:types"]
+        "outDir": "dist/libs/i18n",
+        "outputPath": "dist/libs/i18n",
+        "main": "dist/libs/i18n/index.js"
+      }
     },
     "test": {
       "executor": "@nx/jest:jest",
