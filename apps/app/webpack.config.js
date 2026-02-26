@@ -1,50 +1,91 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const { ModuleFederationPlugin } = require("webpack").container;
+const path = require("path");
+
+const foundationShared = {
+  "@novx/portal": { singleton: true, eager: true, requiredVersion: false },
+  "@novx/core": { singleton: true, eager: true, requiredVersion: false },
+  "@novx/communication": { singleton: true, eager: true, requiredVersion: false },
+  "@novx/i18n": { singleton: true, eager: true, requiredVersion: false },
+};
 
 module.exports = {
-  entry: path.resolve(__dirname, 'src/main.tsx'),
+  entry: "./apps/app/src/main.tsx",
+  mode: "development",
+  devtool: "source-map",
+
   output: {
-    path: path.resolve(__dirname, '../../dist/apps/app'),
-    filename: 'bundle.js',
-    clean: true
+    path: path.resolve(__dirname, "dist"),
+    publicPath: "auto",
+    clean: true,
+    filename: "[name].[contenthash].js",
   },
+
   resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
+    extensions: [".tsx", ".ts", ".js"],
     alias: {
-      '@novx/core': path.resolve(__dirname, '../../libs/core/src'),
-      '@novx/i18n': path.resolve(__dirname, '../../libs/i18n/src'),
-      '@novx/communication': path.resolve(__dirname, '../../libs/communication/src'),
-      '@novx/portal': path.resolve(__dirname, '../../libs/portal/src')
+      "@novx/portal": path.resolve(__dirname, "../../libs/portal/src"),
+      "@novx/core": path.resolve(__dirname, "../../libs/core/src"),
+      "@novx/i18n": path.resolve(__dirname, "../../libs/i18n/src"),
+      "@novx/communication": path.resolve(__dirname, "../../libs/communication/src"),
     },
-    fallback: {
-      fs: false, // disables 'fs' module
-      path: require.resolve('path-browserify') // polyfill 'path'
-    }
   },
+
   module: {
     rules: [
       {
-        test: /\.[jt]sx?$/,
-        loader: 'ts-loader',
-        options: { transpileOnly: true },
-        exclude: /node_modules/
+        oneOf: [
+          // ✅ SVGs → raw source (for sprite system)
+          {
+            test: /\.svg$/,
+            type: "asset/source",
+          },
+
+          // ✅ TS / TSX
+          {
+            test: /\.tsx?$/,
+            loader: "ts-loader",
+            options: { transpileOnly: true },
+            exclude: /node_modules/,
+          },
+        ],
       },
-      {
-        test: /\.css$/,
-        use: ['style-loader', 'css-loader']
-      }
-    ]
+    ],
   },
+
+  experiments: {
+    topLevelAwait: true,
+  },
+
   plugins: [
+    new ModuleFederationPlugin({
+      name: "app",
+      filename: "remoteEntry.js",
+
+      shared: {
+        "reflect-metadata": { singleton: true, eager: true },
+        react: { singleton: true, eager: true, requiredVersion: false },
+        "react-dom": { singleton: true, eager: true, requiredVersion: false },
+        "react-router-dom": { singleton: true, eager: true, requiredVersion: false },
+        "react/jsx-runtime": { singleton: true, eager: true, requiredVersion: false },
+
+        ...foundationShared,
+      },
+    }),
+
     new HtmlWebpackPlugin({
-      template: path.resolve(__dirname, 'src/index.html')
-    })
+      template: "apps/app/index.html",
+    }),
   ],
+
   devServer: {
-    port: 4200,
-    open: true,
-    hot: true
+    port: 3000,
+    historyApiFallback: true,
+    static: {
+      directory: path.join(__dirname, "public"),
+    },
+    headers: { "Access-Control-Allow-Origin": "*" },
+    hot: true,
+    allowedHosts: "all",
   },
-  mode: 'development',
-  devtool: 'source-map'
 };

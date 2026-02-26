@@ -1,9 +1,12 @@
 {
   "entryPoints": [
-    "libs/core/src/index.ts"
+    "libs/core/src/index.ts",
+    "libs/communication/src/index.ts",
+    "libs/i18n/src/index.ts",
+    "libs/portal/src/index.ts"
   ],
-  "tsconfig": "libs/core/tsconfig.lib.json",
-  "out": "dist/docs/core",
+  "tsconfig": "tsconfig.base.json",
+  "out": "dist/docs",
   "excludePrivate": true,
   "excludeProtected": true,
   "excludeInternal": true,

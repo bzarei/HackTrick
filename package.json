@@ -8,6 +8,7 @@
     "apps/*"
   ],
   "scripts": {
+    "docs": "typedoc --options typedoc.json",
     "build": "nx run-many --target=build --all",
     "lint": "nx run-many --target=lint --all",
     "test": "nx run-many --target=test --all"

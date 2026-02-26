@@ -3,49 +3,40 @@ import { catchError, forkJoin, lastValueFrom, map, Observable, of, shareReplay, 
 import { fromFetch } from 'rxjs/fetch';
 import { SourceMapConsumer } from 'source-map-js';
 
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 const UNKNOWN_FUNCTION = '<unknown>';
 
 export interface StackFrame {
-  file: string | null
-  methodName: string | null
-  arguments: any[] | null,
-  lineNumber: number | null,
-  column: number | null
+  file: string | null;
+  methodName: string | null;
+  arguments: any[] | null;
+  lineNumber: number | null;
+  column: number | null;
 }
 
-// parser stuff
+// parser interfaces
 
 interface Parser {
-  parse(line: string): StackFrame | null
+  parse(line: string): StackFrame | null;
 }
 
+// ---------------- Chrome Parser ----------------
 class ChromeParser implements Parser {
-  // instance data
-
-  chromeRe = /^\s*at (.*?) ?\(((?:file|https?|blob|chrome-extension|native|eval|webpack|<anonymous>|\/|[a-z]:\\|\\\\).*?)(?::(\d+))?(?::(\d+))?\)?\s*$/i;
+  chromeRe =
+    /^\s*at (.*?) ?\(((?:file|https?|blob|chrome-extension|native|eval|webpack|<anonymous>|\/|[a-z]:\\|\\\\).*?)(?::(\d+))?(?::(\d+))?\)?\s*$/i;
   chromeEvalRe = /\((\S*)(?::(\d+))(?::(\d+))\)/;
-
-
-  // implement Parser
 
   parse(line: string): StackFrame | null {
     const parts = this.chromeRe.exec(line);
+    if (!parts) return null;
 
-    if (!parts)
-      return null;
-
-
-    const isNative = parts[2] && parts[2].indexOf('native') === 0; // start of line
-    const isEval = parts[2] && parts[2].indexOf('eval') === 0; // start of line
+    const isNative = parts[2] && parts[2].startsWith('native');
+    const isEval = parts[2] && parts[2].startsWith('eval');
 
     const submatch = this.chromeEvalRe.exec(parts[2]);
-    if (isEval && submatch != null) {
-      // throw out eval line/column and use top-most line/column number
-
-      parts[2] = submatch[1]; // url
-      parts[3] = submatch[2]; // line
-      parts[4] = submatch[3]; // column
+    if (isEval && submatch) {
+      parts[2] = submatch[1];
+      parts[3] = submatch[2];
+      parts[4] = submatch[3];
     }
 
     return {
@@ -58,29 +49,22 @@ class ChromeParser implements Parser {
   }
 }
 
+// ---------------- Gecko Parser ----------------
 class GeckoParser implements Parser {
-  // instance data
-
-  geckoRe = /^\s*(.*?)(?:\((.*?)\))?(?:^|@)((?:file|https?|blob|chrome|webpack|resource|\[native).*?|[^@]*bundle)(?::(\d+))?(?::(\d+))?\s*$/i;
+  geckoRe =
+    /^\s*(.*?)(?:\((.*?)\))?(?:^|@)((?:file|https?|blob|chrome|webpack|resource|\[native).*?|[^@]*bundle)(?::(\d+))?(?::(\d+))?\s*$/i;
   geckoEvalRe = /(\S+) line (\d+)(?: > eval line \d+)* > eval/i;
-
-  // implement Parser
 
   parse(line: string): StackFrame | null {
     const parts = this.geckoRe.exec(line);
+    if (!parts) return null;
 
-    if (!parts)
-      return null;
-
-
-    const isEval = parts[3] && parts[3].indexOf(' > eval') > -1;
-
+    const isEval = parts[3] && parts[3].includes(' > eval');
     const submatch = this.geckoEvalRe.exec(parts[3]);
-    if (isEval && submatch != null) {
-      // throw out eval line/column and use top-most line number
+    if (isEval && submatch) {
       parts[3] = submatch[1];
       parts[4] = submatch[2];
-      parts[5] = ""//null; // no column when eval
+      parts[5] = ''; // no column for eval
     }
 
     return {
@@ -93,179 +77,88 @@ class GeckoParser implements Parser {
   }
 }
 
-
+// ---------------- Determine parser ----------------
 function determineParser(): Parser {
-  // Check if running in Node.js environment
-  if (typeof navigator === 'undefined' || typeof process !== 'undefined' && process.versions && process.versions.node) {
-    // Node uses V8, same stack format as Chrome
-    return new ChromeParser()
-  }
-
-  if (navigator.userAgent.toLowerCase().indexOf('chrome') > -1)
-    return new ChromeParser()
-  else if (navigator.userAgent.toLowerCase().indexOf('gecko') > -1)
-    return new GeckoParser()
-  else {
-    console.log("## unable to parse stracktraces, agent is " + navigator.userAgent);
-
-    return {
-      parse(line) {
-        return null
-      }
-    }
-  }
+  if (typeof navigator === 'undefined') return new ChromeParser(); // Node: use ChromeParser
+  const ua = navigator.userAgent.toLowerCase();
+  if (ua.includes('chrome')) return new ChromeParser();
+  if (ua.includes('gecko')) return new GeckoParser();
+  return { parse: () => null };
 }
 
-
+// ---------------- Stacktrace Class ----------------
 export class Stacktrace {
-  // static data
-
-  static loading: { [key: string]: Observable<SourceMapConsumer> } = {};
-  static consumer: { [file: string]: SourceMapConsumer } = {}
-
-  static parser = determineParser()
-
-  // public
-
-  static async mapFrames(...frames: StackFrame[]): Promise<StackFrame[]> {
-    const isNode = typeof window === 'undefined';
-
-    if (isNode) {
-      for (const frame of frames) {
-        if (!frame.file) continue;
-
-        if (!this.consumer[frame.file]) {
-          await this.loadSourcemapNode(frame.file);
-        }
-
-        if (this.consumer[frame.file] && frame.lineNumber) {
-          const pos = this.consumer[frame.file].originalPositionFor({
-            line: frame.lineNumber!,
-            column: frame.column!,
-          });
-          frame.file = pos.source;
-          frame.lineNumber = pos.line;
-          frame.column = pos.column;
-        }
-      }
-
-      return frames;
-    }
-
-    const files: { [file: string]: boolean } = {}
-    for (const frame of frames)
-      if (frame.file && frame.file!.includes(":"))
-        files[frame.file!] = true
-
-    // load missing source maps
-
-    const missingFiles = Object.keys(files).filter(file => this.consumer[file] == undefined)
-
-    if (missingFiles.length > 0) {
-      //console.log("load missing source maps ", missingFiles)
-
-      await lastValueFrom(forkJoin(missingFiles.map(file => this.loadSourcemap(file))))
-    }
-
-    // map
-
-    for (const stackFrame of frames) {
-      if (stackFrame.lineNumber && stackFrame.file && stackFrame.file.includes(":")) {
-        const originalPosition = this.consumer[stackFrame.file].originalPositionFor({
-          line: stackFrame.lineNumber!,
-          column: stackFrame.column!,
-        });
-
-        stackFrame.file = originalPosition.source
-        stackFrame.lineNumber = originalPosition.line
-        stackFrame.column = originalPosition.column
-      }
-    }
-
-    // done
-
-    return frames
-  }
-
+  static parser = determineParser();
+  static consumer: { [file: string]: SourceMapConsumer } = {};
+  static loading: { [uri: string]: Observable<SourceMapConsumer> } = {};
 
   static createFrames(stack: string): StackFrame[] {
-    return stack.split('\n').reduce((stack: StackFrame[], line) => {
-      const frame = this.parser.parse(line)
-
-      if (frame)
-        stack.push(frame);
-
-      return stack;
+    return stack.split('\n').reduce<StackFrame[]>((acc, line) => {
+      const frame = this.parser.parse(line);
+      if (frame) acc.push(frame);
+      return acc;
     }, []);
   }
 
-  // private
+  static async mapFrames(...frames: StackFrame[]): Promise<StackFrame[]> {
+    const files: Record<string, boolean> = {};
+    for (const f of frames) if (f.file && f.file.includes(':')) files[f.file] = true;
 
-  private static async loadSourcemapNode(filePath: string): Promise<void> {
-    try {
-      const fs = await import('fs');
-      const content = fs.readFileSync(filePath, 'utf-8');
-
-      // inline source map
-      const inlineMatch = RegExp(/\/\/# sourceMappingURL=data:application\/json;base64,(.*)/).exec(content);
-      if (inlineMatch) {
-        const mapContent = JSON.parse(Buffer.from(inlineMatch[1], 'base64').toString());
-        this.consumer[filePath] = new SourceMapConsumer(mapContent);
-        return;
-      }
-
-      // external source map file
-      const fileMatch = RegExp(/\/\/# sourceMappingURL=(.*)/).exec(content);
-      if (fileMatch) {
-        const path = await import('path');
-        const mapPath = path.resolve(path.dirname(filePath), fileMatch[1]);
-        const mapContent = JSON.parse(fs.readFileSync(mapPath, 'utf-8'));
-        this.consumer[filePath] = new SourceMapConsumer(mapContent);
-      }
-    } catch (e) {
-      // file not readable or no source map
+    const missing = Object.keys(files).filter((f) => !this.consumer[f]);
+    if (missing.length > 0) {
+      await lastValueFrom(forkJoin(missing.map((uri) => this.loadSourcemap(uri))));
     }
+
+    for (const f of frames) {
+      if (f.file && f.lineNumber && this.consumer[f.file]) {
+        const pos = this.consumer[f.file].originalPositionFor({
+          line: f.lineNumber!,
+          column: f.column!,
+        });
+        f.file = pos.source;
+        f.lineNumber = pos.line;
+        f.column = pos.column;
+      }
+    }
+
+    return frames;
   }
 
+  // ---------------- Browser-friendly source map loader ----------------
   private static loadSourcemap(uri: string): Observable<SourceMapConsumer> {
+    if (this.loading[uri]) return this.loading[uri];
     const uriQuery = new URL(uri).search;
-    const loading = this.loading[uri];
 
-    console.log("### find source map for " + uri)
+    const request = fromFetch(uri).pipe(
+      switchMap((res) => (res.ok ? res.text() : of(''))),
+      switchMap((script) => {
+        if (!script) return of({});
 
-    if (loading)
-      return loading;
+        // inline source map
+        const inline = /\/\/# sourceMappingURL=data:application\/json;base64,(.*)/.exec(script);
+        if (inline) {
+          try {
+            const map = JSON.parse(atob(inline[1]));
+            return of(map);
+          } catch (e) {
+            console.error('Failed to parse inline source map', e);
+            return of({});
+          }
+        }
 
-    else {
-      const request = fromFetch(uri).pipe(
-        catchError((e) => {
-          console.error("### OUCH ", e);
-          return of();
-        }),
+        // external source map
+        const external = /\/\/# sourceMappingURL=(.*)/.exec(script);
+        if (!external) return of({});
+        const mapUri = new URL(external[1], uri).href + uriQuery;
+        return fromFetch(mapUri).pipe(
+          switchMap((res) => (res.ok ? res.json() : of({})))
+        );
+      }),
+      map((sourceMap) => new SourceMapConsumer(sourceMap)),
+      tap((consumer) => (this.consumer[uri] = consumer)),
+      shareReplay(1)
+    );
 
-        switchMap(response => response.text()),
-
-        switchMap(script => {
-          const match = RegExp(/\/\/# sourceMappingURL=(.*)/).exec(script)
-
-          let mapUri = match !== null ? match[1] : "";
-
-          console.log(mapUri)
-          mapUri = new URL(mapUri, uri).href + uriQuery;
-
-          return fromFetch(mapUri)
-        }),
-
-        switchMap(sourceMap => sourceMap.json()),
-
-        map(sourceMap => new SourceMapConsumer(sourceMap)),
-
-        tap(consumer => this.consumer[uri] = consumer),
-
-        shareReplay()
-      );
-
-      return this.loading[uri] = request;
-    }
+    return (this.loading[uri] = request);
   }
 }
