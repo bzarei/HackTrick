@@ -15,7 +15,12 @@ import {  Feature } from '@novx/portal';
 })
 class HelloFeature extends React.Component {
   render() {
-    return <div>
+    return <div  style={{
+        fontSize: '32px',
+        fontWeight: 'bold',
+        margin: '24px',
+        textAlign: 'center'
+      }}>
       WORLD
     </div>;
   }

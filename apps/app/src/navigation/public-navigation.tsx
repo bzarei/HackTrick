@@ -32,64 +32,61 @@ export const PublicNavigation: React.FC = () => {
       }}
     >
       {/* Header */}
-      <header
-        style={{
-          height: '60px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 16px',
-          background: '#1e1e2f',
-          color: '#fff',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          flexShrink: 0,
-        }}
-      >
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#fff',
-            fontSize: '24px',
-            cursor: 'pointer',
-          }}
-        >
-          ☰
-        </button>
+     <header
+  style={{
+    height: '60px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 16px',
+    background: '#1e1e2f',
+    color: '#fff',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    flexShrink: 0,
+  }}
+>
+  {/* LEFT SIDE */}
+  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+    <button
+      onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+      style={{
+        background: 'transparent',
+        border: 'none',
+        color: '#fff',
+        fontSize: '24px',
+        cursor: 'pointer',
+      }}
+    >
+      ☰
+    </button>
 
-        <div style={{ fontWeight: 'bold', fontSize: '18px' }}>My App</div>
+    <div style={{ fontWeight: 'bold', fontSize: '18px' }}>
+      My App
+    </div>
+  </div>
 
-        <button
-          onClick={handleLoginLogout}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: false ? '#d32f2f' : '#1976d2',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = false
-              ? '#f44336'
-              : '#1565c0';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = false
-              ? '#d32f2f'
-              : '#1976d2';
-          }}
-        >
-          {false ? 'Logout' : 'Login'}
-        </button>
+  {/* RIGHT SIDE */}
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <button
+      onClick={handleLoginLogout}
+      style={{
+        padding: '8px 16px',
+        backgroundColor: '#1976d2',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontSize: '14px',
+        fontWeight: '500',
+        transition: 'all 0.2s ease',
+      }}
+    >
+      Login
+    </button>
 
-        {/* Use the LocaleSwitch component here */}
-        <LocaleSwitch localeManager={localeManager} />
-      </header>
+    <LocaleSwitch localeManager={localeManager} />
+  </div>
+</header>
 
       {/* Main */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>

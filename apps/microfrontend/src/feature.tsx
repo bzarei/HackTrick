@@ -15,7 +15,12 @@ import { Feature } from "@novx/portal";
 class MicrofrontendFeature extends React.Component {
   render() {
     return (
-      <div>
+      <div  style={{
+        fontSize: '32px',
+        fontWeight: 'bold',
+        margin: '24px',
+        textAlign: 'center'
+      }}>
           This is the microfrontend feature page.
       </div>
     );
