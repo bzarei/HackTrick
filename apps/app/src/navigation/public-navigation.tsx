@@ -2,8 +2,8 @@ import React from 'react';
 import { NavigationList } from './navigation-list';
 import { Feature, SessionManager, useEnvironment, useInject } from '@novx/portal';
 import { Outlet, useLocation } from 'react-router-dom';
+import LocaleSwitch from '../component/locale-switch';  // Import the new LocaleSwitch component
 import { LocaleManager } from '@novx/i18n';
-
 
 const ReactiveOutlet: React.FC = () => {
   const location = useLocation();
@@ -13,14 +13,14 @@ const ReactiveOutlet: React.FC = () => {
 };
 
 const handleLoginLogout = async () => {
-    const sessionManager = useEnvironment().get(SessionManager);
+  const sessionManager = useEnvironment().get(SessionManager);
 
-      await sessionManager.openSession();
-  };
+  await sessionManager.openSession();
+};
 
 export const PublicNavigation: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
-  const [localeManager] = useInject(LocaleManager)
+  const [localeManager] = useInject(LocaleManager);
 
   return (
     <div
@@ -58,42 +58,37 @@ export const PublicNavigation: React.FC = () => {
           ☰
         </button>
 
-        <div style={{ fontWeight: 'bold', fontSize: '18px' }}>
-          My App
-        </div>
+        <div style={{ fontWeight: 'bold', fontSize: '18px' }}>My App</div>
 
-          <button
-              onClick={handleLoginLogout}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: false ? '#d32f2f' : '#1976d2',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = false
-                  ? '#f44336'
-                  : '#1565c0';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = false
-                  ? '#d32f2f'
-                  : '#1976d2';
-              }}
-            >
-              {false ? 'Logout' : 'Login'}
-            </button>
+        <button
+          onClick={handleLoginLogout}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: false ? '#d32f2f' : '#1976d2',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '500',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = false
+              ? '#f44336'
+              : '#1565c0';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = false
+              ? '#d32f2f'
+              : '#1976d2';
+          }}
+        >
+          {false ? 'Logout' : 'Login'}
+        </button>
 
-        {/* Locale Switch */}
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={() => localeManager.setLocale('de-DE')}>Deutsch</button>
-          <button onClick={() => localeManager.setLocale('en-US')}>English</button>
-        </div>
+        {/* Use the LocaleSwitch component here */}
+        <LocaleSwitch localeManager={localeManager} />
       </header>
 
       {/* Main */}
@@ -121,7 +116,7 @@ export const PublicNavigation: React.FC = () => {
           }}
         >
           {/* Routed content */}
-           <ReactiveOutlet />
+          <ReactiveOutlet />
         </main>
       </div>
     </div>
@@ -129,11 +124,11 @@ export const PublicNavigation: React.FC = () => {
 };
 
 @Feature({
-    id: 'public-navigation',
-    label: 'Navigation',
-    visibility: ["public"],
-    tags: ['portal'],
-    path: '/'
+  id: 'public-navigation',
+  label: 'Navigation',
+  visibility: ['public'],
+  tags: ['portal'],
+  path: '/',
 })
 export class PublicNavigationFeature extends React.Component {
   render() {
