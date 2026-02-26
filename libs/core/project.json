@@ -11,7 +11,8 @@
         "outputPath": "dist/libs/core",
         "tsConfig": "libs/core/tsconfig.lib.json",
         "project": "libs/core/rollup.config.json",
-        "main": "libs/core/src/index.ts"
+        "main": "libs/core/src/index.ts",
+        "sourceMap": true
       }
     },
     "test": {
