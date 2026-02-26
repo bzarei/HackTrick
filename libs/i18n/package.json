@@ -12,23 +12,23 @@
   },
   "license": "Apache-2.0",
   "type": "module",
-  "main": "dist/i18n/index.js",
-  "module": "dist/i18n/index.esm.js",
-  "types": "dist/i18n/index.d.ts",
+  "main": "dist/libs/i18n/index.js",
+  "module": "dist/libs/i18n/index.esm.js",
+  "types": "dist/libs/i18n/index.d.ts",
   "publishConfig": {
     "access": "public"
   },
   "exports": {
     ".": {
-      "types": "./dist/i18n/index.d.ts",
-      "import": "./dist/i18n/index.esm.js",
-      "require": "./dist/i18n/index.js",
-      "default": "./dist/i18n/index.esm.js"
+      "types": "./dist/libs/i18n/index.d.ts",
+      "import": "./dist/libs/i18n/index.esm.js",
+      "require": "./dist/libs/i18n/index.js",
+      "default": "./dist/libs/i18n/index.esm.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/i18n",
+    "dist/libs/i18n",
     "!**/*.tsbuildinfo"
   ],
   "scripts": {
@@ -37,7 +37,7 @@
     "lint": "nx lint i18n"
   },
   "dependencies": {
-    "@novx/core": "0.0.10",
+
     "@swc/helpers": "~0.5.18",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"

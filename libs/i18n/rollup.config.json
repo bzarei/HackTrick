@@ -1,8 +1,8 @@
 {
-  "main": "./src/index.ts",
-  "outputPath": "./dist/libs/i18n",
+  "main": "src/index.ts",
+  "outputPath": "dist/libs/i18n",
   "tsConfig": "./tsconfig.lib.json",
-  "compiler": "swc",
+  "compiler": "ts",
   "format": ["esm"],
   "output": {
     "preserveModules": true,

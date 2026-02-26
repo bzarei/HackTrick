@@ -12,23 +12,23 @@
   },
   "license": "Apache-2.0",
   "type": "module",
-  "main": "dist/communication/index.js",
-  "module": "dist/communication/index.esm.js",
-  "types": "dist/communication/index.d.ts",
+  "main": "dist/libs/communication/index.js",
+  "module": "dist/libs/communication/index.esm.js",
+  "types": "dist/libs/communication/index.d.ts",
   "publishConfig": {
     "access": "public"
   },
   "exports": {
     ".": {
-      "types": "./dist/communication/index.d.ts",
-      "import": "./dist/communication/index.esm.js",
-      "require": "./dist/communication/index.js",
-      "default": "./dist/communication/index.esm.js"
+      "types": "./dist/libs/communication/index.d.ts",
+      "import": "./dist/libs/communication/index.esm.js",
+      "require": "./dist/libs/communication/index.js",
+      "default": "./dist/libs/communication/index.esm.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/communication",
+    "dist/libs/communication",
     "!**/*.tsbuildinfo"
   ],
   "scripts": {

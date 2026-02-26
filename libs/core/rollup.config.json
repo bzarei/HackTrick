@@ -1,8 +1,8 @@
 {
-  "main": "./src/index.ts",
-  "outputPath": "./dist/libs/core",
+  "main": "src/index.ts",
+  "outputPath": "dist/libs/core",
   "tsConfig": "./tsconfig.lib.json",
-  "compiler": "swc",
+  "compiler": "ts",
   "format": ["esm"],
   "output": {
     "preserveModules": true,

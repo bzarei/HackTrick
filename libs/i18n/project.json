@@ -14,16 +14,6 @@
         "main": "libs/i18n/src/index.ts"
       }
     },
-    "build:types": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "tsConfig": "libs/i18n/tsconfig.lib.json",
-        "emitDeclarationOnly": true,
-        "outDir": "dist/libs/i18n",
-        "outputPath": "dist/libs/i18n",
-        "main": "dist/libs/i18n/index.js"
-      }
-    },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/libs/i18n"],

@@ -14,16 +14,6 @@
         "main": "libs/core/src/index.ts"
       }
     },
-    "build:types": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "tsConfig": "libs/core/tsconfig.lib.json",
-        "emitDeclarationOnly": true,
-        "outDir": "dist/libs/core",
-        "outputPath": "dist/libs/core",
-        "main": "dist/libs/core/index.js"
-      }
-    },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/libs/core"],

@@ -12,23 +12,23 @@
   },
   "license": "Apache-2.0",
   "type": "module",
-  "main": "dist/portal/index.js",
-  "module": "dist/portal/index.esm.js",
-  "types": "dist/portal/index.d.ts",
+  "main": "dist/libs/portal/index.js",
+  "module": "dist/libs/portal/index.esm.js",
+  "types": "dist/libs/portal/index.d.ts",
   "publishConfig": {
     "access": "public"
   },
   "exports": {
     ".": {
-      "types": "./dist/portal/index.d.ts",
-      "import": "./dist/portal/index.esm.js",
-      "require": "./dist/portal/index.js",
-      "default": "./dist/portal/index.esm.js"
+      "types": "./dist/libs/portal/index.d.ts",
+      "import": "./dist/libs/portal/index.esm.js",
+      "require": "./dist/libs/portal/index.js",
+      "default": "./dist/libs/portal/index.esm.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/portal",
+    "dist/libs/portal",
     "!**/*.tsbuildinfo"
   ],
   "scripts": {
