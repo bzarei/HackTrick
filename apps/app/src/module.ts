@@ -51,7 +51,13 @@ export class NoAuthenticationService implements AuthenticationService {
     id: 'dummy-user',
     username: 'dummy',
     email: 'dummy@example.com',
-    roles: ['user'], // adjust to your User interface
+    roles: ['user'],
+    given_name: '',
+    family_name: '',
+    email_verified: '',
+    name: '',
+    preferred_username: '',
+    sub: ''
   };
 
   async init(): Promise<void> {
