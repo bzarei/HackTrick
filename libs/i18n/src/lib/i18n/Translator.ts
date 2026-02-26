@@ -1,5 +1,4 @@
 import { Observable } from "rxjs"
-import { TranslatorBuilder } from "./TranslatorBuilder"
 
 /**
  * <code>Translations</code> simply is a JS any object that contains values on any level
@@ -30,9 +29,6 @@ export interface Event {
  * A <code>Translator</code> is responsible to load and fetch i18n values given keys that consist of a namespace and a path.
  */
 export class Translator {
-  static builder() : TranslatorBuilder {
-    return new TranslatorBuilder()
-  }
   /**
      * an observable that will emit events whenever a namespace is loaded...
      */
