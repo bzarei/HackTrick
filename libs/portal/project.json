@@ -37,7 +37,7 @@
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": ["libs/portal/**/*.ts", "libs/portal/**/*.tsx"]
+        "lintFilePatterns": ["libs/portal/src/**/*.{ts,tsx,js,jsx}"]
       }
     },
     "docs": {

@@ -141,7 +141,7 @@ export class ApplicationModule extends AbstractModule {
 
   @create()
   createTranslator(localeManager: LocaleManager) : Translator {
-    return new TranslatorBuilder()
+    return Translator.builder()
       .loader(new AssetTranslationLoader({ path: '/i18n/' }))
       .localeManager(localeManager)
       .build()
