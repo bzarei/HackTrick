@@ -1,0 +1,42 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "app",
+  "root": "apps/app",
+  "sourceRoot": "apps/app/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "options": {
+        "outputPath": "dist/apps/app",
+        "main": "apps/app/src/main.tsx",
+        "tsConfig": "apps/app/tsconfig.app.json",
+        "index": "apps/app/src/index.html",
+        "webpackConfig": "apps/app/webpack.config.js"
+      }
+    },
+    "serve": {
+      "executor": "@nx/webpack:dev-server",
+      "options": {
+        "buildTarget": "app:build",
+        "host": "localhost",
+        "port": 4200
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:eslint",
+      "options": {
+        "lintFilePatterns": ["apps/app/**/*.ts", "apps/app/**/*.tsx"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/app"],
+      "options": {
+        "jestConfig": "apps/app/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

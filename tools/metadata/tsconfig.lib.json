@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../../",
+    "outDir": "../../dist/tools/metadata",
+    "module": "ESNext",
+    "target": "ES2022",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": [
+    "tools/metadata/src/**/*.ts",
+    "libs/portal/src/**/*.ts"
+  ]
+}

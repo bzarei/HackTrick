@@ -1,0 +1,15 @@
+{
+  "name": "@tools/metadata",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "build-metadata": "src/build-metadata.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "glob": "^11.0.0",
+    "tsx": "^4.7.0",
+    "@types/node": "^22.0.0"
+  }
+}
