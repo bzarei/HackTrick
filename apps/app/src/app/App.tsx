@@ -1,16 +1,8 @@
 import React from 'react';
 
-import { injectable, module, Environment, Module } from '@novx/core';
-import { Feature } from '@novx/portal';
+import { Environment } from '@novx/core';
+import { DeploymentManager, EnvironmentContext, Feature, RouterManager } from '@novx/portal';
 
-@injectable()
-class Foo {}
-
-@module()
-class ApplicationModule extends Module {}
-
-const environment = new Environment({module: ApplicationModule})
-const foo = environment.get(Foo)
 
 @Feature({
   id: "hello",
@@ -31,11 +23,39 @@ class HelloFeature extends React.Component {
   }
 }
 
-export default function App() {
-  return (
-    <div>
-      <h1>Hello Nx + React App (Webpack)</h1>
-      <HelloFeature></HelloFeature>
-    </div>
-  );
+export class App extends React.Component {
+    state = {ready: false};
+    routerManager!: RouterManager;
+
+    static contextType = EnvironmentContext
+
+    declare context: Environment
+
+    async componentDidMount() { 
+        this.routerManager = this.context.get(RouterManager);
+        const deploymentManager = this.context.get(DeploymentManager);
+
+        deploymentManager.checkLazyFeatures('shell', import.meta.webpackContext('./', { 
+                recursive: true, 
+                regExp: /\.tsx$/ 
+            }
+        )); 
+
+        // mark ready
+
+        this.setState({ready: true});
+    }
+
+    render() {
+        if (!this.state.ready) 
+          return <div>Loading application…</div>;
+
+        // render the router with lazy FeatureOutlets
+
+        return (
+            this.routerManager.renderRouter()
+        );
+    }
 }
+
+export default App;
