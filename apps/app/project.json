@@ -5,6 +5,12 @@
   "sourceRoot": "apps/app/src",
   "projectType": "application",
   "targets": {
+    "scan-metadata": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run metadata:scan --moduleFolder=apps/app --outFile=apps/app/src/manifest.json"
+      }
+    },
     "build": {
       "executor": "@nx/webpack:webpack",
       "options": {

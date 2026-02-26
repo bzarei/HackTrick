@@ -11,9 +11,14 @@ module.exports = {
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
     alias: {
-      '@core': path.resolve(__dirname, '../../libs/core/src'),
-      '@i18n': path.resolve(__dirname, '../../libs/i18n/src'),
-      '@communication': path.resolve(__dirname, '../../libs/communication/src')
+      '@novx/core': path.resolve(__dirname, '../../libs/core/src'),
+      '@novx/i18n': path.resolve(__dirname, '../../libs/i18n/src'),
+      '@novx/communication': path.resolve(__dirname, '../../libs/communication/src'),
+      '@novx/portal': path.resolve(__dirname, '../../libs/portal/src')
+    },
+    fallback: {
+      fs: false, // disables 'fs' module
+      path: require.resolve('path-browserify') // polyfill 'path'
     }
   },
   module: {
@@ -29,14 +34,6 @@ module.exports = {
         use: ['style-loader', 'css-loader']
       }
     ]
-  },
-  resolve: {
-    extensions: ['.tsx', '.ts', '.js'], // important: include .tsx
-      alias: {
-            '@novx/core': path.resolve(__dirname, '../../dist/libs/core'),
-             '@novx/portal': path.resolve(__dirname, '../../dist/libs/portal'),
-            '@novx/i18n': path.resolve(__dirname, '../../dist/libs/i18n')
-      },
   },
   plugins: [
     new HtmlWebpackPlugin({

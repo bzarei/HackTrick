@@ -1,0 +1,14 @@
+{
+  "name": "app",
+  "private": true,
+  "scripts": {
+    "start": "nx serve app",
+    "build": "nx build app"
+  },
+  "dependencies": {
+    "@novx/core": "*",
+    "@novx/portal": "*",
+    "@novx/communication": "*",
+    "@novx/i18n": "*"
+  }
+}
