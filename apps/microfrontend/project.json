@@ -1,0 +1,48 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "microfrontend",
+  "root": "apps/microfrontend",
+  "sourceRoot": "apps/microfrontend/src",
+  "projectType": "application",
+  "targets": {
+    "scan-metadata": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nx run metadata:scan --moduleFolder=apps/microfrontend --outFile=apps/microfrontend/src/manifest.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "options": {
+        "outputPath": "dist/apps/microfrontend",
+        "main": "apps/microfrontend/src/main.tsx",
+        "tsConfig": "apps/microfrontend/tsconfig.app.json",
+        "index": "apps/microfrontend/src/index.html",
+        "webpackConfig": "apps/microfrontend/webpack.config.js"
+      }
+    },
+    "serve": {
+      "executor": "@nx/webpack:dev-server",
+      "options": {
+        "buildTarget": "app:build",
+        "host": "localhost",
+        "port": 4200
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:eslint",
+      "options": {
+        "lintFilePatterns": ["apps/app/**/*.ts", "apps/app/**/*.tsx"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/apps/app"],
+      "options": {
+        "jestConfig": "apps/app/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

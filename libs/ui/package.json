@@ -1,0 +1,46 @@
+{
+  "name": "@novx/ui",
+  "version": "0.0.10",
+  "description": "ui library",
+  "homepage": "https://github.com/coolsamson7/novx",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/coolsamson7/novx"
+  },
+  "bugs": {
+    "url": "https://github.com/coolsamson7/novx/issues"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "dist/libs/ui/index.js",
+  "module": "dist/libs/ui/index.esm.js",
+  "types": "dist/libs/ui/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/libs/ui/index.d.ts",
+      "import": "./dist/libs/ui/index.esm.js",
+      "require": "./dist/libs/ui/index.js",
+      "default": "./dist/libs/ui/index.esm.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/libs/ui",
+    "!**/*.tsbuildinfo"
+  ],
+  "scripts": {
+    "build": "nx build ui",
+    "test": "nx test ui",
+    "lint": "nx lint ui"
+  },
+  "dependencies": {
+    "@novx/core": "0.0.10",
+    "@novx/portal": "0.0.10",
+    "@novx/i18n": "0.0.10",
+    "axios": "^1.13.5"
+  },
+  "devDependencies": {}
+}

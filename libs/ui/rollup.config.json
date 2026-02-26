@@ -1,0 +1,12 @@
+{
+  "main": "src/index.ts",
+  "outputPath": "dist/libs/ui",
+  "tsConfig": "./tsconfig.lib.json",
+  "compiler": "ts",
+  "format": ["esm"],
+  "output": {
+    "sourcemap": true,
+    "preserveModules": true,
+    "preserveModulesRoot": "src"
+  }
+}

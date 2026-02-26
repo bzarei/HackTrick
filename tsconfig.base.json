@@ -9,6 +9,7 @@
     "paths": {
       "@novx/core": ["libs/core/src/index.ts"],
       "@novx/i18n": ["libs/i18n/src/index.ts"],
+      "@novx/ui": ["libs/ui/src/index.ts"],
       "@novx/communication": ["libs/communication/src/index.ts"],
       "@novx/portal": ["libs/portal/src/index.ts"]
     },

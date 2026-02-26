@@ -1,7 +1,7 @@
 import type { Config } from '@jest/types';
 
 const config: Config.InitialOptions = {
-  displayName: 'app',
+  displayName: 'microfrontend',
   preset: '../../jest.preset.js',
   testEnvironment: 'jsdom',
   transform: {

@@ -1,0 +1,49 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "ui",
+  "root": "libs/ui",
+  "sourceRoot": "libs/ui/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/rollup:rollup",
+      "dependsOn": ["^build"],
+      "options": {
+        "outputPath": "dist/libs/ui",
+        "tsConfig": "libs/ui/tsconfig.lib.json",
+        "project": "libs/ui/rollup.config.json",
+        "main": "libs/ui/src/index.ts",
+        "external": ["@novx/core"]
+      }
+    },
+    "build:types": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "tsConfig": "libs/ui/tsconfig.lib.json",
+        "outDir": "dist/libs/ui",
+        "outputPath": "dist/libs/ui",
+        "main": "dist/libs/ui/index.js"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/ui"],
+      "options": {
+        "jestConfig": "libs/ui/jest.config.cts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["libs/ui/**/*.ts"]
+      }
+    },
+    "docs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "typedoc --tsconfig libs/ui/tsconfig.lib.json --out docs/libs/ui"
+      }
+    }
+  }
+}
