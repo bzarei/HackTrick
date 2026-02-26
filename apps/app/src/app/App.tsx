@@ -4,25 +4,6 @@ import { Environment } from '@novx/core';
 import { DeploymentManager, EnvironmentContext, Feature, RouterManager } from '@novx/portal';
 
 
-@Feature({
-  id: "hello",
-  label: "hello",
-  path: "/hello",
-  icon: "shell:add",
-  description: "hello",
-  tags: ["menu"],
-  permissions: [],
-  features: [],
-  visibility: ["private", "public"]
-})
-class HelloFeature extends React.Component {
-  render() {
-    return <div>
-      HELLO
-    </div>;
-  }
-}
-
 export class App extends React.Component {
     state = {ready: false};
     routerManager!: RouterManager;

@@ -49,25 +49,6 @@
         "public"
       ],
       "children": []
-    },
-    {
-      "id": "hello",
-      "label": "hello",
-      "path": "/hello",
-      "component": "HelloFeature",
-      "sourceFile": "apps/app/src/app/App.tsx",
-      "icon": "shell:add",
-      "description": "hello",
-      "tags": [
-        "menu"
-      ],
-      "permissions": [],
-      "features": [],
-      "visibility": [
-        "private",
-        "public"
-      ],
-      "children": []
     }
   ],
   "moduleName": "ApplicationModule",

@@ -83,11 +83,12 @@ export const NavigationList: React.FC<NavigationListProps> = ({
           >
             {/* Icon                  style={{ flexShrink: 0 }} */}
             {feature.icon && (
-              <Icon
+              /*<Icon
                 name={feature.icon}
                 size={20}
 
-              />
+              />*/
+              <div></div>
             )}
 
             {/* Label */}
