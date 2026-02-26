@@ -5,6 +5,7 @@
   "compiler": "ts",
   "format": ["esm"],
   "output": {
+    "sourcemap": true,
     "preserveModules": true,
     "preserveModulesRoot": "src"
   }

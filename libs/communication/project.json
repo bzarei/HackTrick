@@ -7,6 +7,7 @@
   "targets": {
     "build": {
       "executor": "@nx/rollup:rollup",
+      "dependsOn": ["^build"],
       "options": {
         "outputPath": "dist/libs/communication",
         "tsConfig": "libs/communication/tsconfig.lib.json",
@@ -18,7 +19,6 @@
       "executor": "@nx/js:tsc",
       "options": {
         "tsConfig": "libs/communication/tsconfig.lib.json",
-        "emitDeclarationOnly": true,
         "outDir": "dist/libs/communication",
         "outputPath": "dist/libs/communication",
         "main": "dist/libs/communication/index.js"

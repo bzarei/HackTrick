@@ -17,14 +17,13 @@
     },
     "build:types": {
       "executor": "@nx/js:tsc",
+      "dependsOn": ["^build"],
       "options": {
         "tsConfig": "libs/portal/tsconfig.lib.json",
-        "emitDeclarationOnly": true,
         "outDir": "dist/libs/portal",
         "outputPath": "dist/libs/portal",
         "main": "dist/libs/portal/index.js"
       },
-      "dependsOn": ["^build:types"]
     },
     "test": {
       "executor": "@nx/jest:jest",
