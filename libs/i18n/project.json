@@ -5,14 +5,8 @@
   "sourceRoot": "libs/i18n/src",
   "projectType": "library",
   "targets": {
-    "docs": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "typedoc"
-      }
-    },
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/i18n",
@@ -20,6 +14,24 @@
         "packageJson": "libs/i18n/package.json",
         "main": "libs/i18n/src/index.ts",
         "assets": ["libs/i18n/*.md"]
+      },
+      "dependsOn": ["^build"]
+    },
+    "build:types": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "tsConfig": "libs/i18n/tsconfig.lib.json",
+        "emitDeclarationOnly": true,
+        "outDir": "dist/libs/i18n"
+      },
+      "dependsOn": ["^build:types"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/i18n"],
+      "options": {
+        "jestConfig": "libs/i18n/jest.config.cts",
+        "passWithNoTests": true
       }
     },
     "lint": {
@@ -28,12 +40,10 @@
         "lintFilePatterns": ["libs/i18n/**/*.ts"]
       }
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/libs/i18n"],
+    "docs": {
+      "executor": "nx:run-commands",
       "options": {
-        "jestConfig": "libs/i18n/jest.config.cts",
-        "passWithNoTests": true
+        "command": "typedoc --tsconfig libs/i18n/tsconfig.lib.json --out docs/libs/i18n"
       }
     }
   }

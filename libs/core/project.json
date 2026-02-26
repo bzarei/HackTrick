@@ -5,14 +5,8 @@
   "sourceRoot": "libs/core/src",
   "projectType": "library",
   "targets": {
-    "docs": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "typedoc"
-      }
-    },
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/core",
@@ -22,10 +16,12 @@
         "assets": ["libs/core/*.md"]
       }
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
+    "build:types": {
+      "executor": "@nx/js:tsc",
       "options": {
-        "lintFilePatterns": ["libs/core/**/*.ts"]
+        "tsConfig": "libs/core/tsconfig.lib.json",
+        "emitDeclarationOnly": true,
+        "outDir": "dist/libs/core"
       }
     },
     "test": {
@@ -34,6 +30,18 @@
       "options": {
         "jestConfig": "libs/core/jest.config.cts",
         "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["libs/core/**/*.ts"]
+      }
+    },
+    "docs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "typedoc --tsconfig libs/core/tsconfig.lib.json --out docs/libs/core"
       }
     }
   }

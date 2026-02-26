@@ -1,9 +1,11 @@
 {
-  "name": "my-monorepo",
+  "name": "novx",
   "version": "0.0.10",
   "license": "MIT",
+  "private": true,
   "workspaces": [
-    "libs/*"
+    "libs/*",
+    "apps/*"
   ],
   "scripts": {
     "build": "nx run-many --target=build --all",

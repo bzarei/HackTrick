@@ -5,14 +5,8 @@
   "sourceRoot": "libs/portal/src",
   "projectType": "library",
   "targets": {
-    "docs": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "typedoc"
-      }
-    },
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/portal",
@@ -20,13 +14,17 @@
         "packageJson": "libs/portal/package.json",
         "main": "libs/portal/src/index.ts",
         "assets": ["libs/portal/*.md"]
-      }
+      },
+      "dependsOn": ["^build"]
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
+    "build:types": {
+      "executor": "@nx/js:tsc",
       "options": {
-        "lintFilePatterns": ["libs/portal/**/*.ts"]
-      }
+        "tsConfig": "libs/portal/tsconfig.lib.json",
+        "emitDeclarationOnly": true,
+        "outDir": "dist/libs/portal"
+      },
+      "dependsOn": ["^build:types"]
     },
     "test": {
       "executor": "@nx/jest:jest",
@@ -34,6 +32,18 @@
       "options": {
         "jestConfig": "libs/portal/jest.config.cts",
         "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["libs/portal/**/*.ts", "libs/portal/**/*.tsx"]
+      }
+    },
+    "docs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "typedoc --tsconfig libs/portal/tsconfig.lib.json --out docs/libs/portal"
       }
     }
   }

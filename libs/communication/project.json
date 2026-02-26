@@ -5,14 +5,8 @@
   "sourceRoot": "libs/communication/src",
   "projectType": "library",
   "targets": {
-    "docs": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "typedoc"
-      }
-    },
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/communication",
@@ -20,6 +14,24 @@
         "packageJson": "libs/communication/package.json",
         "main": "libs/communication/src/index.ts",
         "assets": ["libs/communication/*.md"]
+      },
+      "dependsOn": ["^build"]
+    },
+    "build:types": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "tsConfig": "libs/communication/tsconfig.lib.json",
+        "emitDeclarationOnly": true,
+        "outDir": "dist/libs/communication"
+      },
+      "dependsOn": ["^build:types"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/communication"],
+      "options": {
+        "jestConfig": "libs/communication/jest.config.cts",
+        "passWithNoTests": true
       }
     },
     "lint": {
@@ -28,12 +40,10 @@
         "lintFilePatterns": ["libs/communication/**/*.ts"]
       }
     },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/libs/communication"],
+    "docs": {
+      "executor": "nx:run-commands",
       "options": {
-        "jestConfig": "libs/communication/jest.config.cts",
-        "passWithNoTests": true
+        "command": "typedoc --tsconfig libs/communication/tsconfig.lib.json --out docs/libs/communication"
       }
     }
   }

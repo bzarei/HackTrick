@@ -1,16 +1,16 @@
 {
   "name": "@novx/communication",
   "version": "0.0.10",
-  "description": "di and aop library",
+  "description": "Communication library",
   "homepage": "https://github.com/coolsamson7/novx",
   "repository": {
-    "type": "git,",
+    "type": "git",
     "url": "https://github.com/coolsamson7/novx"
   },
   "bugs": {
     "url": "https://github.com/coolsamson7/novx/issues"
   },
-  "licence": "Apache",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "dist/communication/index.js",
   "module": "dist/communication/index.esm.js",
@@ -20,23 +20,25 @@
   },
   "exports": {
     ".": {
+      "types": "./dist/communication/index.d.ts",
       "import": "./dist/communication/index.esm.js",
       "require": "./dist/communication/index.js",
-      "types": "./dist/communication/index.d.ts",
       "default": "./dist/communication/index.esm.js"
     },
     "./package.json": "./package.json"
-  },
-  "scripts": {
-    "build": "nx build communication",
-    "prepare": "npm run build && rm -rf dist/communication && cp -r ../../dist/libs/communication dist/communication",
-    "test": "nx test communication",
-    "lint": "nx lint communication"
   },
   "files": [
     "dist/communication",
     "!**/*.tsbuildinfo"
   ],
-  "dependencies": {},
+  "scripts": {
+    "build": "nx build communication",
+    "test": "nx test communication",
+    "lint": "nx lint communication"
+  },
+  "dependencies": {
+    "@novx/core": "0.0.10",
+    "axios": "^1.13.5"
+  },
   "devDependencies": {}
 }

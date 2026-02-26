@@ -15,12 +15,11 @@
     ],
     "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
   },
-
   "plugins": [
-    { "plugin": "@nx/js", "exclude": ["libs/core"] },
-    { "plugin": "@nx/rollup", "exclude": ["libs/core"] },
-    { "plugin": "@nx/eslint", "exclude": ["libs/core"] },
-    { "plugin": "@nx/jest", "exclude": ["libs/core"] }
+    { "plugin": "@nx/js" },
+    { "plugin": "@nx/rollup" },
+    { "plugin": "@nx/eslint" },
+    { "plugin": "@nx/jest" }
   ],
   "release": {
     "version": {
@@ -29,6 +28,9 @@
   },
   "targetDefaults": {
     "test": {
+      "dependsOn": ["^build"]
+    },
+    "build": {
       "dependsOn": ["^build"]
     }
   }
