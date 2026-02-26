@@ -1,6 +1,6 @@
 {
-  "main": "./src/index.ts",
-  "outputPath": "./dist/libs/communication",
+  "main": "src/index.ts",
+  "outputPath": "dist/libs/communication",
   "tsConfig": "./tsconfig.lib.json",
   "compiler": "ts",
   "format": ["esm"],

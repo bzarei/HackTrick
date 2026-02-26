@@ -12,7 +12,8 @@
         "outputPath": "dist/libs/i18n",
         "tsConfig": "libs/i18n/tsconfig.lib.json",
         "project": "libs/i18n/rollup.config.json",
-        "main": "libs/i18n/src/index.ts"
+        "main": "libs/i18n/src/index.ts",
+        "external": ["@novx/core"]
       }
     },
     "test": {

@@ -11,7 +11,8 @@
         "outputPath": "dist/libs/portal",
         "tsConfig": "libs/portal/tsconfig.lib.json",
         "project": "libs/portal/rollup.config.json",
-        "main": "libs/portal/src/index.ts"
+        "main": "libs/portal/src/index.ts",
+        "external": ["@novx/core", "@novx/i18n", "@novx/communication"]
       },
       "dependsOn": ["^build"]
     },

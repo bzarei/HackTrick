@@ -12,7 +12,8 @@
         "outputPath": "dist/libs/communication",
         "tsConfig": "libs/communication/tsconfig.lib.json",
         "project": "libs/communication/rollup.config.json",
-        "main": "libs/communication/src/index.ts"
+        "main": "libs/communication/src/index.ts",
+        "external": ["@novx/core"]
       }
     },
     "build:types": {
