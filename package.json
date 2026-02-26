@@ -13,7 +13,8 @@
     "test": "nx run-many --target=test --all"
   },
   "devDependencies": {
-    "@nx/eslint": "^22.0.4",
+    "@nrwl/eslint-plugin-nx": "^19.8.4",
+    "@nx/eslint": "^22.5.2",
     "@nx/eslint-plugin": "^22.0.4",
     "@nx/jest": "^22.5.2",
     "@nx/js": "^22.5.2",

@@ -32,6 +32,25 @@
       "children": []
     },
     {
+      "id": "world",
+      "label": "world",
+      "path": "/world",
+      "component": "HelloFeature",
+      "sourceFile": "apps/app/src/feature/world-feature.tsx",
+      "icon": "shell:add",
+      "description": "world",
+      "tags": [
+        "menu"
+      ],
+      "permissions": [],
+      "features": [],
+      "visibility": [
+        "private",
+        "public"
+      ],
+      "children": []
+    },
+    {
       "id": "hello",
       "label": "hello",
       "path": "/hello",

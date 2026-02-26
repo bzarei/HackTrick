@@ -16,6 +16,8 @@ import {
   PortalService, RemoteComponentLoader, I18NLoader,
   KeycloakAuthenticationService,
   SessionManager,
+  AuthenticationService,
+  User,
 } from '@novx/portal';
 
 import { AssetTranslationLoader, LocaleManager, LocalStorageLocaleBackingStore, Translator, TranslatorBuilder } from '@novx/i18n';
@@ -31,8 +33,6 @@ import {
   Environment,
   create,
   onRunning,
-  injectable,
-  TypeDescriptor,
 } from '@novx/core';
 
 import {
@@ -43,6 +43,55 @@ import {
 
 import manifest from './manifest.json';
 
+/**
+ * No-op authentication service that returns a dummy user.
+ */
+export class NoAuthenticationService implements AuthenticationService {
+  private dummyUser: User = {
+    id: 'dummy-user',
+    username: 'dummy',
+    email: 'dummy@example.com',
+    roles: ['user'], // adjust to your User interface
+  };
+
+  async init(): Promise<void> {
+    // nothing to do
+    console.log('[NoAuthenticationService] init called');
+  }
+
+  async login(): Promise<void> {
+    console.log('[NoAuthenticationService] login called - automatically succeeds');
+  }
+
+  async logout(): Promise<void> {
+    console.log('[NoAuthenticationService] logout called - automatically succeeds');
+  }
+
+  getToken(): string | null {
+    return 'dummy-token';
+  }
+
+  getAccessToken(): string | null {
+    return 'dummy-access-token';
+  }
+
+  getIdToken(): string | null {
+    return 'dummy-id-token';
+  }
+
+  getRefreshToken(): string | null {
+    return 'dummy-refresh-token';
+  }
+
+  getUserProfile(): User | null {
+    return this.dummyUser;
+  }
+
+  isAuthenticated(): boolean {
+    return true;
+  }
+}
+
 // tracing
 
 new Tracer({
@@ -50,8 +99,8 @@ new Tracer({
   trace: new ConsoleTrace('%d [%p]: %m %f\n'), // %f
   paths: {
     application: TraceLevel.FULL,
-    di: TraceLevel.OFF,
-    portal: TraceLevel.OFF,
+    di: TraceLevel.FULL,
+    portal: TraceLevel.FULL,
     form: TraceLevel.OFF,
   },
 });
@@ -69,11 +118,10 @@ new Serialization();
   description: 'Shell',
   name: '',
 })
-@injectable({module: "shell"})
 export class ApplicationModule extends AbstractModule {
   @create()
   createSessionManager() : SessionManager<any,any> {
-    return new SessionManager(new KeycloakAuthenticationService());
+    return new SessionManager(new NoAuthenticationService() /*KeycloakAuthenticationService()*/);
   }
 
   @create()
