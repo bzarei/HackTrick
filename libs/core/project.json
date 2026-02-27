@@ -12,7 +12,19 @@
         "tsConfig": "libs/core/tsconfig.lib.json",
         "project": "libs/core/rollup.config.json",
         "main": "libs/core/src/index.ts",
-        "sourceMap": true
+        "sourceMap": true,
+        "assets": [
+          {
+            "input": "libs/core",
+            "glob": "package.json",
+            "output": "."
+          },
+          {
+            "input": "libs/core",
+            "glob": "README.md",
+            "output": "."
+          }
+        ]
       }
     },
     "test": {

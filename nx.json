@@ -22,9 +22,11 @@
     { "plugin": "@nx/jest" }
   ],
   "release": {
+    "projects": ["libs/*"],
     "version": {
-      "preVersionCommand": "npx nx run-many -t build"
-    }
+      "conventionalCommits": true
+    },
+    "projectsRelationship": "independent"
   },
   "targetDefaults": {
     "test": {

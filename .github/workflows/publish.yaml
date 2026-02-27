@@ -1,28 +1,30 @@
-name: Publish
+name: Release
 
 on:
   push:
-    tags:
-      - 'v*'   # triggers only on version tags like v0.0.3
+    branches:
+      - main
 
 permissions:
-  contents: read
-  packages: write   # required for npm publish
+  contents: write
+  packages: write
 
 jobs:
-  publish:
+  release:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # required for Nx release
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: 'https://registry.npmjs.org/'
+          registry-url: https://registry.npmjs.org/
 
       - run: npm ci
 
-      # Navigate to the library folder
-      - run: cd libs/core && npm publish
+      - run: npx nx release --yes
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

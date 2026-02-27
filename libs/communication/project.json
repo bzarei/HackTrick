@@ -14,7 +14,19 @@
         "project": "libs/communication/rollup.config.json",
         "main": "libs/communication/src/index.ts",
         "external": ["@novx/core"],
-        "sourceMap": true
+        "sourceMap": true,
+        "assets": [
+          {
+            "input": "libs/communication",
+            "glob": "package.json",
+            "output": "."
+          },
+          {
+            "input": "libs/communication",
+            "glob": "README.md",
+            "output": "."
+          }
+        ]
       }
     },
     "build:types": {

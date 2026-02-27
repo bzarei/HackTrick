@@ -14,7 +14,19 @@
         "project": "libs/i18n/rollup.config.json",
         "main": "libs/i18n/src/index.ts",
         "external": ["@novx/core"],
-        "sourceMap": true
+        "sourceMap": true,
+        "assets": [
+          {
+            "input": "libs/i18n",
+            "glob": "package.json",
+            "output": "."
+          },
+          {
+            "input": "libs/i18n",
+            "glob": "README.md",
+            "output": "."
+          }
+        ]
       }
     },
     "test": {

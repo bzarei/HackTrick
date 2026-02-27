@@ -13,7 +13,19 @@
         "project": "libs/portal/rollup.config.json",
         "main": "libs/portal/src/index.ts",
         "external": ["@novx/core", "@novx/i18n", "@novx/communication"],
-        "sourceMap": true
+        "sourceMap": true,
+        "assets": [
+          {
+            "input": "libs/portal",
+            "glob": "package.json",
+            "output": "."
+          },
+          {
+            "input": "libs/portal",
+            "glob": "README.md",
+            "output": "."
+          }
+        ]
       },
       "dependsOn": ["^build"]
     },
