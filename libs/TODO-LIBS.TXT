@@ -1,6 +1,10 @@
 ### TODO
 
-- clean TODOS
+- release
+- url geht nicht / Moudle wird nicht geladen!
+- stack fixen!!!
+
+- session & navigation
 
 ### LATER
 
@@ -11,23 +15,21 @@ Circular dependency:
  -> libs/i18n/src/lib/format/registerFormatter.decorator.ts
  -> libs/i18n/src/lib/format/FormatterRegistry.ts
 
-- documentation
-- examples
-- stack
+- wiki documentation
 
 ### NOW
 
-- React doppelt?
-- release
-- wir
-- url geht nicht / Moudle wird nicht geladen!
-
 - stack
 
-- session & navigation
+- inherited environemnt FUCK!!!!! -> TyoeDesciptr is screed
 
 ### DONE
 
+- deploymen manager + {}
+- route manager muss () => bekomnen um die root zu berechen!
+- inherited onRunnign geht nicht
+- inject geht auch nicht. WHAT THE FUCK
+- TEST TypeDescripor
 - feature verschwindet
 - Navigations logik?
 - List
