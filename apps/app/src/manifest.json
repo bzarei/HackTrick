@@ -68,6 +68,24 @@
         "public"
       ],
       "children": []
+    },
+        {
+      "id": "home",
+      "label": "home",
+      "path": "/",
+      "component": "HomeFeature",
+      "sourceFile": "apps/app/src/feature/home-feature.tsx",
+      "icon": "shell:add",
+      "description": "home",
+      "tags": [
+      ],
+      "permissions": [],
+      "features": [],
+      "visibility": [
+        "private",
+        "public"
+      ],
+      "children": []
     }
   ],
   "moduleName": "ApplicationModule",
