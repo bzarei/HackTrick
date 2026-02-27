@@ -1,1 +1,0 @@
-{"version":3,"file":"violation-context.d.ts","sourceRoot":"","sources":["violation-context.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,aAAa,EAAE,MAAM,mBAAmB,CAAA;AAEjD,MAAM,WAAW,gBAAgB;IAC7B,KAAK,EAAE,MAAM,CAAA;IACb,SAAS,EAAE,aAAa,CAAA;IACxB,UAAU,EAAE,aAAa,EAAE,CAAA;CAC9B"}
