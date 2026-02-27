@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
-import { FeatureRegistry, SessionManager, useInject } from '@novx/portal';
+import { FeatureRegistry, SessionManager, useInject, Icon } from '@novx/portal';
 import { LocaleManager } from '@novx/i18n';
 import { of } from 'rxjs';
 
@@ -40,13 +40,15 @@ export const NavigationList: React.FC<NavigationListProps> = ({
    * Resolve features
    * ---------------------------------------------------- */
   const features = React.useMemo(() => {
-    return featureRegistry
+    const features = featureRegistry
       .finder()
       .withPath()
       .withoutParent()
       .withVisibility(sessionManager.hasSession())
       .withTag('menu')
       .find();
+
+      return features
   }, [location.pathname]);
 
   /* ----------------------------------------------------
@@ -83,12 +85,11 @@ export const NavigationList: React.FC<NavigationListProps> = ({
           >
             {/* Icon                  style={{ flexShrink: 0 }} */}
             {feature.icon && (
-              /*<Icon
+              <Icon
                 name={feature.icon}
                 size={20}
 
-              />*/
-              <div></div>
+              />
             )}
 
             {/* Label */}

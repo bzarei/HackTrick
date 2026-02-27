@@ -20,6 +20,7 @@
     "jest.config.cts"
   ],
   "references": [
-
+    { "path": "../core" },
+    { "path": "../portal" }
   ]
 }

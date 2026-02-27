@@ -4,6 +4,7 @@
   "tsConfig": "./tsconfig.lib.json",
   "compiler": "ts",
   "format": ["esm"],
+  "external": ["@novx/core", "@novx/portal", "@novx/i18n", "@novx/communication"],
   "output": {
     "sourcemap": true,
     "preserveModules": true,

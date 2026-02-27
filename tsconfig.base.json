@@ -11,11 +11,11 @@
     "esModuleInterop": true,
     "baseUrl": ".",
     "paths": {
-      "@novx/core": ["libs/core/src/index.ts"],
-      "@novx/i18n": ["libs/i18n/src/index.ts"],
-      "@novx/ui": ["libs/ui/src/index.ts"],
-      "@novx/communication": ["libs/communication/src/index.ts"],
-      "@novx/portal": ["libs/portal/src/index.ts"]
+      "@novx/core": ["dist/libs/core"],
+      "@novx/i18n": ["dist/libs/i18n"],
+      "@novx/ui": ["dist/libs/ui"],
+      "@novx/communication": ["dist/libs/communication"],
+      "@novx/portal": ["dist/libs/portal"]
     },
     "sourceMap": true,
     "importHelpers": true,

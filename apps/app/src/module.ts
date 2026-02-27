@@ -18,6 +18,7 @@ import {
   SessionManager,
   AuthenticationService,
   User,
+  SvgSpriteRegistry
 } from '@novx/portal';
 
 import { AssetTranslationLoader, LocaleManager, LocalStorageLocaleBackingStore, Translator, TranslatorBuilder } from '@novx/i18n';
@@ -235,7 +236,7 @@ export class ApplicationModule extends AbstractModule {
 
     Tracer.Trace('application', TraceLevel.LOW, 'setup');
 
-    /* sprites
+    // sprites
 
     this.get(SvgSpriteRegistry).registerAll("shell", import.meta.webpackContext(
         './icons',
@@ -243,7 +244,7 @@ export class ApplicationModule extends AbstractModule {
           recursive: false,
           regExp: /\.svg$/
         }
-       ));*/
+       ));
 
     // session manager
 

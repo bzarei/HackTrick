@@ -11,6 +11,19 @@ import { SessionManager } from './session/session-manager';
 import { useInject } from "./environment";
 import { ErrorPage } from "./component/error-page";
 
+// TEST
+
+
+const HomePage: React.FC = () => {
+  return (
+    <div style={{ padding: 40, textAlign: 'center' }}>
+      <h1>Welcome to My App</h1>
+      <p>Select a feature from the navigation to get started.</p>
+    </div>
+  );
+};
+
+
 /* ======================================================
  * PrivateRoute Component - checks session status
  * ====================================================== */
@@ -31,11 +44,15 @@ const PrivateRoute: React.FC<{ feature: FeatureMetadata; children: React.ReactNo
           
           // Call openSession - this will redirect to Keycloak
           // Don't await or set isChecking to false because it will cause a full redirect
-          sessionManager.openSession().catch((err: any) => {
-            console.error(`[PrivateRoute] Error during openSession:`, err);
-            setError(err.message || 'Login failed');
-            setIsChecking(false);
-          });
+          sessionManager.openSession()
+           .then(() => {
+              setIsChecking(false); // session is ready
+            })
+            .catch((err: any) => {
+                console.error(`[PrivateRoute] Error during openSession:`, err);
+                setError(err.message || 'Login failed');
+                setIsChecking(false);
+              });
           
           // Don't set isChecking to false here - let the redirect happen
           return;
@@ -221,6 +238,7 @@ export class RouterManager {
         $feature: root,
         children: [
           ...features
+
             .filter(
               (feature) => feature !== root && feature.path && !feature.parent,
             )

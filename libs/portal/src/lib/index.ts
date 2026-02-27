@@ -16,6 +16,7 @@ export * from './i18n';
 export * from './service';
 export * from './outlet-loader';
 export * from './component';
+export * from './ui';
 
 
 

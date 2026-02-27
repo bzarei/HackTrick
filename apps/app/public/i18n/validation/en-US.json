@@ -1,0 +1,101 @@
+{
+  "number": {
+    "type": {
+      "message":  "expected number",
+      "label_message": "{label} expected a number"
+    },
+    "required": {
+      "message":  "the field is required",
+      "label_message": "{label} is required"
+    },
+    "min": {
+      "message":  "expected a number greater than {min}",
+      "label_message": "{label} expected a number greater than {min}"
+    },
+    "max": {
+      "message":  "expected a number smaller than {max}",
+      "label_message": "{label} expected a number smaller than {max}"
+    },
+    "lessThan": {
+      "message":  "Nur Zahlen kleiner als {number} erlaubt",
+      "label_message": "{label} erlaubt nur Zahlen kleiner als {number}"
+    },
+    "greaterThan": {
+      "message":  "Nur Zahlen größer als {number} erlaubt",
+      "label_message": "{label} erlaubt nur Zahlen größer als {number}"
+    }
+  },
+
+  "boolean": {
+    "type": {
+      "type": {
+        "message":  "expected a boolean",
+        "label_message": "{label} expected a boolean"
+      }
+    },
+    "required": {
+      "message":  "the field is required",
+      "label_message": "{label} is required"
+    },
+    "isTrue": {
+      "message":  "expected true",
+      "label_message": "{label} expected true"
+    },
+    "isFalse": {
+      "message":  "expected false",
+      "label_message": "{label} expected false"
+    }
+  },
+  "date": {
+    "type": {
+      "message":  "expected a date",
+      "label_message": "{label} expected a date"
+    },
+    "required": {
+      "message":  "the field is required",
+      "label_message": "{label} is required"
+    },
+    "min": {
+      "message":  "expected a date greater than {min}",
+      "label_message": "{label} expected a date greater than {min}"
+    },
+    "max": {
+      "message":  "expected a number smaller than {min}",
+      "label_message": "{label} expected a number smaller than {min}"
+    }
+  },
+  "string": {
+    "type": {
+      "message":  "expected a string",
+      "label_message": "{label} expected a string"
+    },
+    "required": {
+      "message":  "field is required",
+      "label_message": "{label} is required"
+    },
+    "length": {
+      "message":  "maximum {length} characters possible",
+      "label_message": "{label} expects strings with a maximum length of {length}"
+    },
+    "min": {
+      "message":  "expected a string with minimum {min} characters",
+      "label_message": "{label} expected a string with minimum {min} characters}"
+    },
+    "max": {
+      "message":  "expected a string with  maximum {max} characters",
+      "label_message": "{label} expected a string with  maximum {max} characters"
+    },
+    "nonEmpty": {
+      "message":  "non empty string expected",
+      "label_message": "{label} expected a nonempty string"
+    },
+    "matches": {
+      "message":  "Matches...",
+      "label_message": "{label} matches..."
+    },
+    "email": {
+      "message":  "Expected a valid EMail-Address",
+      "label_message": "{label} expected a valid EMail-Address"
+    }
+  }
+}

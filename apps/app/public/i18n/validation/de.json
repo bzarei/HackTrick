@@ -1,0 +1,98 @@
+{
+  "number": {
+    "type": {
+      "message":  "Zahl erwartet",
+      "label_message": "{label} erwartet eine Zahl"
+    },
+    "required": {
+      "message":  "Das ist ein Pflichtfeld",
+      "label_message": "{label} ist ein Pflichtfeld"
+    },
+    "min": {
+      "message":  "Nur Zahlen größer als {min} erlaubt",
+      "label_message": "{label} erlaubt nur Zahlen größer als oder gleich {min}"
+    },
+    "max": {
+      "message":  "Nur Zahlen kleiner oder gleich {max} erlaubt",
+      "label_message": "{label} erlaubt nur Zahlen kleiner oder gleich als {max}"
+    },
+    "lessThan": {
+      "message":  "Nur Zahlen kleiner als {number} erlaubt",
+      "label_message": "{label} erlaubt nur Zahlen kleiner als {number}"
+    },
+    "greaterThan": {
+      "message":  "Nur Zahlen größer als {number} erlaubt",
+      "label_message": "{label} erlaubt nur Zahlen größer als {number}"
+    }
+  },
+  "boolean": {
+    "type": {
+      "message":  "Boole'scher Wert erwartet",
+      "label_message": "{label} erwartet einen boole'schen Wert"
+    },
+    "required": {
+      "message":  "Das ist ein Pflichtfeld",
+      "label_message": "{label} ist ein Pflichtfeld"
+    },
+    "isTrue": {
+      "message":  "Wahr erwartet",
+      "label_message": "{label} erwartet der Wert 'Wahr'"
+    },
+    "isFalse": {
+      "message":  "Unwahr erwartet",
+      "label_message": "{label} erwartet der Wert 'Unwahr'"
+    }
+  },
+  "date": {
+    "type": {
+      "message":  "Datum erwartet",
+      "label_message": "{label} erwartet ein Datum"
+    },
+    "required": {
+      "message":  "Das ist ein Pflichtfeld",
+      "label_message": "{label} ist ein Pflichtfeld"
+    },
+    "min": {
+      "message":  "Nur Datum größer als {min} erlaubt",
+      "label_message": "{label} erlaubt nur Datum größer als oder gleich {min}"
+    },
+    "max": {
+      "message":  "Nur Datum kleiner oder gleich {max} erlaubt",
+      "label_message": "{label} erlaubt nur Datum kleiner oder gleich als {max}"
+    }
+  },
+  "string": {
+    "type": {
+      "message":  "Zeichenkette erwartet",
+      "label_message": "{label} erwartet eine Zeichenkette"
+    },
+    "required": {
+      "message":  "Das ist ein Pflichtfeld",
+      "label_message": "{label} ist ein Pflichtfeld"
+    },
+    "length": {
+      "message":  "Genau ${length} Zeichen erlaubt",
+      "label_message": "{label} erwartet genau {length} Zeichen"
+    },
+    "min": {
+      "message":  "Nur Zeichenketten mit mindestend {min} Zeichen erlaubt",
+      "label_message": "{label} erlaubt nur Zeichenketten mit mindestend {min} Zeichen"
+    },
+    "max": {
+      "message":  "Nur Zeichenketten mit maximal {max} Zeichen erlaubt",
+      "label_message": "{label} erlaubt nur Zeichenketten mit maximal {max} Zeichen"
+    },
+    "nonEmpty": {
+      "message":  "Zeichen erwartet",
+      "label_message": "{label} erwartet Zeichen"
+    },
+    "matches": {
+      "message":  "Matched",
+      "label_message": "{label} matched..."
+    },
+    "email": {
+      "message":  "EMail-Adresse erwartet",
+      "label_message": "{label} erwartet eine EMail-Adresse"
+    }
+  }
+}
