@@ -1,6 +1,6 @@
 {
   "name": "@novx/i18n",
-  "version": "0.0.10",
+  "version": "0.1.0",
   "description": "i18n library",
   "homepage": "https://github.com/coolsamson7/novx",
   "repository": {
@@ -37,7 +37,6 @@
     "lint": "nx lint i18n"
   },
   "dependencies": {
-
     "@swc/helpers": "~0.5.18",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
