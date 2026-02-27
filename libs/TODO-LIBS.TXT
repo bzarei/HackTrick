@@ -1,0 +1,51 @@
+### TODO
+
+- clean TODOS
+
+### LATER
+
+Circular dependency:
+ libs/i18n/src/lib/format/FormatterRegistry.ts
+ -> libs/i18n/src/lib/format/formatter/index.ts
+ -> libs/i18n/src/lib/format/formatter/DateFormatter.ts
+ -> libs/i18n/src/lib/format/registerFormatter.decorator.ts
+ -> libs/i18n/src/lib/format/FormatterRegistry.ts
+
+- documentation
+- examples
+- stack
+
+### NOW
+
+- React doppelt?
+- release
+- wir
+- url geht nicht / Moudle wird nicht geladen!
+
+- stack
+
+- session & navigation
+
+### DONE
+
+- feature verschwindet
+- Navigations logik?
+- List
+- Icon
+- lint?
+- Translator.Builder
+- icons
+- microfrontend
+- avatar
+- i18n switch
+- sample app!
+- tools & portal
+- test aop
+- test validation
+- test stream
+- test typedescriptor
+- github pages
+- badge & toplevel README
+- cleanup #1
+- licence none
+- links & readme

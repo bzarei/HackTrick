@@ -1,0 +1,1 @@
+{"version":3,"file":"string-builder.d.ts","sourceRoot":"","sources":["string-builder.ts"],"names":[],"mappings":"AAAA;;GAEG;AACH,qBAAa,aAAa;IAGxB,OAAO,CAAC,MAAM,CAAgB;IAI9B;;;OAGG;IACI,MAAM,CAAC,KAAK,EAAE,MAAM,GAAG,aAAa;IAM3C;;OAEG;IACI,KAAK,IAAI,aAAa;IAM7B;;OAEG;IACI,QAAQ,IAAI,MAAM;CAG1B"}
