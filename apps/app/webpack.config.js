@@ -21,6 +21,7 @@ module.exports = {
     filename: "[name].[contenthash].js",
   },
 
+  
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
     alias: {
@@ -61,6 +62,11 @@ module.exports = {
     new ModuleFederationPlugin({
       name: "app",
       filename: "remoteEntry.js",
+
+      remotes: {
+        microfrontend:
+          "microfrontend@http://localhost:3001/remoteEntry.js",
+      },
 
       shared: {
         "reflect-metadata": { singleton: true, eager: true },

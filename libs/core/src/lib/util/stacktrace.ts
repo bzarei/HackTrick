@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { catchError, forkJoin, lastValueFrom, map, Observable, of, shareReplay, switchMap, tap } from 'rxjs';
 import { fromFetch } from 'rxjs/fetch';
+import { Observable as Obs } from 'rxjs';
 import { SourceMapConsumer } from 'source-map-js';
 
 const UNKNOWN_FUNCTION = '<unknown>';
@@ -86,6 +87,32 @@ function determineParser(): Parser {
   return { parse: () => null };
 }
 
+// ---------------- Cross-environment helpers ----------------
+
+/**
+ * Decodes a base64 string in both browser (atob) and Node (Buffer).
+ */
+function decodeBase64(encoded: string): string {
+  if (typeof atob === 'function') {
+    return atob(encoded);
+  }
+  return Buffer.from(encoded, 'base64').toString('utf-8');
+}
+
+/**
+ * Returns an Observable that fetches a URL as a Response, working in both
+ * environments. In Node 18+ the global fetch is available; for older Node
+ * versions jest tests typically mock fetch or use `jest-fetch-mock` /
+ * `whatwg-fetch`. We fall back to fromFetch (which itself wraps fetch) so
+ * there is a single code path — just ensure fetch is globally available in
+ * your Jest setup (e.g. `global.fetch = require('node-fetch')`).
+ */
+function fetchObs(url: string): Observable<Response> {
+  // fromFetch lazily calls fetch; as long as fetch is globally present at
+  // call time this works in Node 18+ and in browsers.
+  return fromFetch(url);
+}
+
 // ---------------- Stacktrace Class ----------------
 export class Stacktrace {
   static parser = determineParser();
@@ -129,7 +156,7 @@ export class Stacktrace {
     if (this.loading[uri]) return this.loading[uri];
     const uriQuery = new URL(uri).search;
 
-    const request = fromFetch(uri).pipe(
+    const request = fetchObs(uri).pipe(
       switchMap((res) => (res.ok ? res.text() : of(''))),
       switchMap((script) => {
         if (!script) return of({});
@@ -138,7 +165,7 @@ export class Stacktrace {
         const inline = /\/\/# sourceMappingURL=data:application\/json;base64,(.*)/.exec(script);
         if (inline) {
           try {
-            const map = JSON.parse(atob(inline[1]));
+            const map = JSON.parse(decodeBase64(inline[1])); // ← was atob()
             return of(map);
           } catch (e) {
             console.error('Failed to parse inline source map', e);
@@ -150,12 +177,16 @@ export class Stacktrace {
         const external = /\/\/# sourceMappingURL=(.*)/.exec(script);
         if (!external) return of({});
         const mapUri = new URL(external[1], uri).href + uriQuery;
-        return fromFetch(mapUri).pipe(
+        return fetchObs(mapUri).pipe(
           switchMap((res) => (res.ok ? res.json() : of({})))
         );
       }),
       map((sourceMap) => new SourceMapConsumer(sourceMap)),
       tap((consumer) => (this.consumer[uri] = consumer)),
+      catchError((err) => {
+        console.error('Failed to load source map for', uri, err);
+        return of(new SourceMapConsumer({ version: "3", sources: [], names: [], mappings: '' }));
+      }),
       shareReplay(1)
     );
 

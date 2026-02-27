@@ -27,22 +27,38 @@ export function toWebpackContextKey(path: string): string {
   return `./${relative}`;
 }
 
+export interface DeploymentManagerOptions {
+  featureRegistry: FeatureRegistry,
+  loader: DeploymentLoader,
+  localManifest: Manifest,
+
+  processor?: ManifestProcessor,
+  hasPermission?: (permission: string) => boolean,
+  hasFeature?: (feature: string) => boolean,
+}
+
 export class DeploymentManager {
   // instance data
 
   deployment?: Deployment;
 
+  private featureRegistry: FeatureRegistry
+  private loader: DeploymentLoader
+  private localManifest: Manifest
+  private processor?: ManifestProcessor
+  private hasPermissionFn: (permission: string) => boolean
+  private hasFeatureFn: (feature: string) => boolean
+
   // constructor
 
-  constructor(
-    private featureRegistry: FeatureRegistry,
-    private loader: DeploymentLoader,
-    private localManifest: Manifest,
-    private processor: ManifestProcessor | null = null,
-    private hasPermissionFn?: (permission: string) => boolean,
-    private hasFeatureFn?: (feature: string) => boolean,
-  ) {
-  
+  constructor(options : DeploymentManagerOptions) {
+    this.featureRegistry = options.featureRegistry
+    this.loader = options.loader
+    this.localManifest = options.localManifest
+
+    this.processor = options.processor
+    this.hasPermissionFn = options.hasPermission ?? ((permission: string) => true)
+    this.hasFeatureFn = options.hasPermission ?? ((feature: string) => true)
   }
 
   checkLazyFeatures(module: string, context : __WebpackModuleApi.RequireContext) {

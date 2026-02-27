@@ -10,7 +10,8 @@ const foundationShared = {
 };
 
 module.exports = {
-  entry: './apps/microfrontend/src/main.tsx',
+  //entry: './apps/microfrontend/src/main.tsx',
+  entry: './apps/microfrontend/src/bootstrap.ts',
   mode: 'development',
   devtool: 'source-map',
   devServer: {
@@ -24,9 +25,15 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    publicPath: 'http://localhost:3001/',
+    publicPath: 'auto',
     crossOriginLoading: 'anonymous',
   },
+
+  optimization: {
+    runtimeChunk: false,  // disable extra runtime chunk
+    splitChunks: false,   // optional: force one bundle
+  },
+    
   resolve: {
     extensions: ['.tsx', '.ts', '.js', '.json'],
     alias: {
@@ -51,17 +58,17 @@ module.exports = {
         './Module': './apps/microfrontend/src/Module',
       },
       shared: {
-        "reflect-metadata": { singleton: true, requiredVersion: false },
-        react: { singleton: true, requiredVersion: false },
-        'react-dom': { singleton: true, requiredVersion: false },
-        'react-router-dom': { singleton: true, requiredVersion: false },
-        "react/jsx-runtime": { singleton: true, requiredVersion: false },
+        "reflect-metadata": { singleton: true, eager: true, requiredVersion: false },
+        react: { singleton: true,  eager: true, requiredVersion: false },
+        'react-dom': { singleton: true,  eager: true, requiredVersion: false },
+        'react-router-dom': { singleton: true,  eager: true, requiredVersion: false },
+        "react/jsx-runtime": { singleton: true,  eager: true, requiredVersion: false },
 
         ...foundationShared,
       },
     }),
-    new HtmlWebpackPlugin({
+    /*new HtmlWebpackPlugin({
       template: './apps/microfrontend/index.html',
-    }),
+    }),*/
   ],
 };
