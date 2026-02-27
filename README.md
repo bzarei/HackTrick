@@ -145,12 +145,12 @@ Portal implements a react portal framework supporting microfrontends vastly simp
 - i18n integration
 - meta-data based approach that allows for 
   - filtering of available features according to authentication, authorization or other aspects ( e.g. feature flags )
-  - automatic router configuration acccording to the metadata
+  - automatic router configuration according to the metadata
   - dynamic navigation features that are based on the meta-data and custom rules
   - feature outlets that cover both local and federated components and allow for custom async preloading logic ( e.g. i18n loading )
 - custom application configurations with support for both client and server side logic
 
-While the framework supports enterprise portals with dynamic microfrontends - and server side configuration mechanisms - as one extreme it also covers small local only applciations without significant coding and rampup overhead, making it a one-size-fits-all framework.
+While the framework supports enterprise portals with dynamic microfrontends - and server side configuration mechanisms - as one extreme it also covers small local only applications without significant coding and rampup overhead, making it a one-size-fits-all framework.
 
 The main idea for most of the mechanisms is that modules expose meta-data of "what is inside", by annotating available "features" ( named components used internally or part of the routing ) with special decorators that can be parsed and extracted.
 
@@ -219,12 +219,12 @@ inside of the main "module"
 export class ApplicationModule extends AbstractModule {
   @create()
   createSessionManager() : SessionManager<any,any> {
-    return new SessionManager(new DummyAuthenticationService());
+    return new SessionManager(new DummyAuthenticationService()); // for now, would be OIDC in reality
   }
 
   @create()
   createDeploymentLoader(portalService: PortalService) : DeploymentLoader {
-    return new EmptyDeploymentLoader() // only local 
+    return new EmptyDeploymentLoader() // only local, so far 
   }
 
   @create()
@@ -232,7 +232,7 @@ export class ApplicationModule extends AbstractModule {
       return new DeploymentManager(
         featureRegistry,
         loader,
-        manifest as unknown as Manifest
+        manifest as Manifest // that's the local genaretd manifest.json
       );
   }
 
@@ -247,13 +247,12 @@ export class ApplicationModule extends AbstractModule {
           client: deploymentManager.clientInfo(),
       });
 
-      // set root
+      // the root if the router will be a feature with tag "portal" and the correct visibility
 
       routerManager.setRoot(featureRegistry.finder()
         .withTag('portal')
         .withVisibility(sessionManager.hasSession())
-        .findOne()
-        );
+        .findOne());
         
       await this.get(SessionManager).init();
     }
@@ -271,13 +270,13 @@ export const createEnvironment = async () : Promise<Environment> => {
 ```
 
 The crucial parts are
-- the DeploymentManager which is responsible to compute a merged manifest.json. Since we are still completely local,
-  it will only return the local manifest.json
-- A FeatureRegistry will be filled with the collected information
-- The RoutingManager will compute dynamic routes based on the provided features and a handpicked "root" feature
-
-The routing logic will simply pick all features that have a defined "path" and add them as children to the desired
-root feature, which in this case has a defined tag "portal" and has a visibility property that matches the current session state.
+- the `DeploymentManager` which is responsible to compute a merged `manifest.json`. Since we are still completely local,
+  it will only return the local `manifest.json`
+- A `FeatureRegistry` collects all features and will be filled with the gathered information of the deployment manager.  Since it knows about all registered components - local or remote - 
+ a `<FeatureOutlet>` component is now available that renders any registered feature by name, which is the basis for a number of mechanisms.
+- The `RoutingManager` will compute dynamic routes based on the provided features and a handpicked "root" feature
+  The routing logic will simply pick all features that have a defined "path" and add them as children - inserting a feature outlet - to the desired
+  root feature, which in this case has a defined tag "portal" and has a visibility property that matches the current session state.
 
 Launching the application is now just a couple lines of code.
 
@@ -306,7 +305,7 @@ export class App extends React.Component {
         this.routerManager = this.context.get(RouterManager);
     }
 
-    render() {
+    override render() {
         return (
             this.routerManager.renderRouter()
         );
@@ -314,10 +313,11 @@ export class App extends React.Component {
 }
 ```
 
-simply delegates to the defined routes with the root being a "navigation" page that renders the possible routes and includes an outlet.
+simply delegates to rendering to the defined routes. So what is the root?
+Well, a specific feature which acts as the main page typically offering navigation possibilities ( as a side bar ).
 
-The interesting part, is that since we already have the complete meta-data available, we dont need to hardcode that anymore,
-but just rely on a couple of conventions to list the available routes.
+The interesting part, is that since we already have the complete meta-data available, we dont need to hardcode the navigation entries anymore,
+but can rely on a couple of conventions to list the available routes.
 
 Example: 
 
@@ -332,16 +332,24 @@ const features = featureRegistry
 ```
 
 In this case all features, that have the corresponding visibility status matching the session state and have a tag "menu", will be listed 
-as corresponding "<Link>"s.
+as corresponding `<Link>`s.
 
-So, what about microfrontends? Federated modules will take a similar approach, definit a root module, exposing a manifest, etc.
-The main application will only need to change the corresponding deployment loader:
+Isn't that awsome? 
+
+Ok, but we promised microfrontends as well, were are they?
+
+Federated modules will take a similar approach, by defining a root module, exposing a `manifest.json`, etc.
+The main application will only need to change the corresponding deployment loader to integrate it.
 ```ts
   return new RemoteDeploymentLoader([
         { name: 'microfrontend', url: 'http://localhost:3001' },
       ]);
 ```
-In this case, the manifest is fetched dynamically from the known url, and included in the deployment.
+In this case, the manifest is fetched dynamically from the known url and merged with the local manifest.
+
+This is good enough for a local environment used for development purposes, in production the logic would be handed over to a 
+server component that is aware of different microfrontends and configurations also including more sophisticated logic to filter
+features according to feature flags, etc.
 
 ### Communication
 

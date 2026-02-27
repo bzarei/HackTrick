@@ -157,6 +157,11 @@ export class RouterManager {
   private routeObjects: RouteObjectWithFeature[] = [];
   private featureListeners = new Set<FeatureChangeListener>();
 
+  private computeRoot : ()  => FeatureMetadata = () => ({
+    id: "",
+    component: ""
+  })
+
   private root: FeatureMetadata = {
     id: "",
     component: ""
@@ -169,8 +174,9 @@ export class RouterManager {
 
   // public
 
-  setRoot(root: FeatureMetadata) {
-    this.root = root;
+  setRoot(root: () => FeatureMetadata) {
+    this.computeRoot = root
+    this.root = root();
   }
 
   onFeatureChange(listener: FeatureChangeListener): () => void {
@@ -264,6 +270,7 @@ export class RouterManager {
             return sessionManager.onSessionChange(() => {
               // Rebuild routes
               this.routeObjects = [];
+              this.root = this.computeRoot()
               forceUpdate(v => v + 1);
             });
           }, []);

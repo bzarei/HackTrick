@@ -214,11 +214,11 @@ export class ApplicationModule extends AbstractModule {
 
       // set root
 
-      routerManager.setRoot(featureRegistry.finder()
+      routerManager.setRoot(() => (featureRegistry.finder()
         .withTag('portal')
         .withVisibility(sessionManager.hasSession())
         .findOne()
-        );
+        ))
     }
 
   // error handlers
