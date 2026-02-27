@@ -4,12 +4,6 @@ import 'reflect-metadata'
 import { TraceLevel, Tracer } from "../tracer"
 import { StringBuilder } from "../util"
 import { GType } from "../lang"
-/**
- * Generic type for class references
- *
-export interface GType<T> extends Function {
-    new (...args: any[]): T
-}*/
 
 enum PropertyType {
     FIELD,
@@ -133,15 +127,12 @@ export interface Decorator<T = any> {
 export class TypeDescriptor<T> {
     // Static factory
 
-    private static globalRegistry = new WeakMap<GType<any>, TypeDescriptor<any>>();
-
     static forType<T>(type: GType<T>): TypeDescriptor<T> {
-        let descriptor = TypeDescriptor.globalRegistry.get(type);
-        if (!descriptor) {
-            descriptor = new TypeDescriptor<T>(type);
-            TypeDescriptor.globalRegistry.set(type, descriptor);
-        }
-        return descriptor;
+        const proto = type.prototype as any
+        if (!proto.__descriptor)
+           proto.__descriptor = new TypeDescriptor<T>(type)
+
+        return proto.__descriptor
     }
 
     // instance data
