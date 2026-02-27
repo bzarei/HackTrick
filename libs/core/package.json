@@ -1,6 +1,6 @@
 {
   "name": "@novx/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "DI and AOP library",
   "homepage": "https://github.com/coolsamson7/novx",
   "repository": {
@@ -28,8 +28,11 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist/libs/core",
-    "!**/*.tsbuildinfo"
+    "*.js",
+    "*.esm.js",
+    "*.d.ts",
+    "*.js.map",
+    "README.md"
   ],
   "scripts": {
     "build": "nx build core",
