@@ -5,12 +5,12 @@ import { Feature } from "@novx/portal";
   id: "feature",
   label: "microfrontend",
   icon: "shell:chat",
-  description: "feature page",
+  description: "microfrontend",
   path: "/microfrontend/feature",
   tags: ["menu"],
   permissions: [],
   features: [],
-  visibility: ["public"],
+  visibility: ["public", "private"],
 })
 class MicrofrontendFeature extends React.Component {
   render() {

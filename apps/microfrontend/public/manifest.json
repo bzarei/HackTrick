@@ -5,7 +5,7 @@
   "features": [
     {
       "id": "feature",
-      "label": "feature Page",
+      "label": "feature",
       "path": "/microfrontend/feature",
       "component": "MicrofrontendFeature",
       "sourceFile": "apps/microfrontend/src/feature.tsx",
@@ -17,7 +17,7 @@
       "permissions": [],
       "features": [],
       "visibility": [
-        "public"
+        "public",  "private"
       ],
       "children": []
     }

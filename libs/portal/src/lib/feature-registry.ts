@@ -161,7 +161,10 @@ class FeatureFinder {
 
   find(): FeatureMetadata[] {
     return this.registry.filter((feature) => {
-      for (const filter of this.filter) if (!filter(feature)) return false;
+      for (const filter of this.filter)
+        if (!filter(feature)) {
+            return false;
+        }
 
       return true;
     });

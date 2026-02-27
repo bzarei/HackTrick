@@ -103,12 +103,11 @@ export class NoAuthenticationService implements AuthenticationService {
 
 new Tracer({
   enabled: false,
-  trace: new ConsoleTrace('%d [%p]: %m %f\n'), // %f
+  trace: new ConsoleTrace('%d [%p]: %m\n'), // %f
   paths: {
     application: TraceLevel.FULL,
     di: TraceLevel.FULL,
     portal: TraceLevel.FULL,
-    form: TraceLevel.OFF,
   },
 });
 

@@ -9,9 +9,11 @@ import { createEnvironment } from './module';
 
 import './feature/hello-feature'
 import './feature/world-feature'
-import './feature/home-feature'
+import { HomePage } from './feature/home-feature'
 import './navigation/private-navigation'
 import './navigation/public-navigation'
+
+const home = HomePage
 
 // create environment
 
