@@ -32,12 +32,23 @@ export class SessionManager<U extends User, T extends Ticket> {
   // instance data
 
   private session?: Session<U, T>;
+  private listeners = new Set<() => void>();
+
+  onSessionChange(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  private emitSessionChange() {
+    for (const l of this.listeners) l();
+  }
 
   // constructor
 
   constructor(private authenticationService: AuthenticationService) {}
 
   // lifecycle
+
   async init(): Promise<void> {
     // Try to initialize auth service (this checks SSO)
 
@@ -69,11 +80,15 @@ export class SessionManager<U extends User, T extends Ticket> {
   async openSession() {
     await this.authenticationService.login();
     await this.init();
+
+    this.emitSessionChange()
   }
 
   async closeSession() {
     await this.authenticationService.logout();
     this.session = undefined;
+
+    this.emitSessionChange()
   }
 
   /**

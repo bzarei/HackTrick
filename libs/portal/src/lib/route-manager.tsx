@@ -257,9 +257,20 @@ export class RouterManager {
 
   public renderRouter() {
     const RoutesWrapper: React.FC = () => {
-      const result = useRoutes(this.getRouteObjects());
-      return result;
-    };
+      const [sessionManager] = useInject(SessionManager);
+          const [, forceUpdate] = React.useState(0);
+
+          React.useEffect(() => {
+            return sessionManager.onSessionChange(() => {
+              // Rebuild routes
+              this.routeObjects = [];
+              forceUpdate(v => v + 1);
+            });
+          }, []);
+
+          const result = useRoutes(this.getRouteObjects());
+          return result;
+        };
 
     return (
       <BrowserRouter>
