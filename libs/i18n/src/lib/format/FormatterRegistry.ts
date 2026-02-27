@@ -43,5 +43,4 @@ export class FormatterRegistry {
     }
 }
 
-import "./formatter"
 
