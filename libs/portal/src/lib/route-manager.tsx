@@ -11,19 +11,6 @@ import { SessionManager } from './session/session-manager';
 import { useInject } from "./environment";
 import { ErrorPage } from "./component/error-page";
 
-// TEST
-
-
-const HomePage: React.FC = () => {
-  return (
-    <div style={{ padding: 40, textAlign: 'center' }}>
-      <h1>Welcome to My App</h1>
-      <p>Select a feature from the navigation to get started.</p>
-    </div>
-  );
-};
-
-
 /* ======================================================
  * PrivateRoute Component - checks session status
  * ====================================================== */
@@ -240,7 +227,7 @@ export class RouterManager {
           ...features
 
             .filter(
-              (feature) => feature !== root && feature.path && !feature.parent,
+              (feature) => feature !== root && feature.path && !feature.parent && !(feature.tags || []).includes("portal"),
             )
             .map(build),
           // Catch-all error route for undefined paths
