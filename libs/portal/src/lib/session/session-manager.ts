@@ -1,131 +1,68 @@
+import { Subject } from "rxjs";
+import { AuthenticationRequest, Authentication, Ticket, Session } from "./authentication";
 
-// session manager
-
-import { AuthenticationService, Ticket, User } from './authentication';
-
-export interface Session<U extends User, T extends Ticket = Ticket> {
-  /**
-   * the user object
-   */
-  user: U;
-  /**
-   * the ticket
-   */
-  ticket: T;
-  /**
-   * the session expiry in ms.
-   */
-  expiry?: number;
-
-  /**
-   * the session locale
-   */
-  locale?: string;
-
-  /**
-   * any other properties
-   */
-  [prop: string]: any;
+export interface SessionEvent<U=any,T extends Ticket = Ticket> {
+    type: "opening" | "opened" | "closing" | "closed"
+    session: Session<U,T>
 }
 
-export class SessionManager<U extends User, T extends Ticket> {
-  // instance data
+export class SessionManager<U = any, T extends Ticket = Ticket> {
+  public readonly events$ = new Subject<SessionEvent<U, T>>();
 
-  private session?: Session<U, T>;
-  private listeners = new Set<() => void>();
-
-  onSessionChange(listener: () => void): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-
-  private emitSessionChange() {
-    for (const l of this.listeners) l();
-  }
+  private session: Session<U, T> | null = null;
 
   // constructor
 
-  constructor(private authenticationService: AuthenticationService) {}
+  constructor(protected authentication: Authentication<U, T>) {}
 
-  // lifecycle
+  // implement 
 
-  async init(): Promise<void> {
-    // Try to initialize auth service (this checks SSO)
+  async start(): Promise<Session<U, T> | null> {
+    const restored = await this.authentication.init();
 
-    await this.authenticationService.init();
-
-    if (this.authenticationService.isAuthenticated()) {
-      const accessToken = this.authenticationService.getAccessToken()!;
-      const idToken = this.authenticationService.getIdToken()!;
-      const refreshToken = this.authenticationService.getRefreshToken()!;
-      const user = this.authenticationService.getUserProfile()!;
-      const expiresAt = Date.now() + (user.exp ?? 3600) * 1000;
-
-      this.session = {
-        user: user as U,
-        ticket: {
-          idToken: idToken,
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-        } as T,
-        expiry: expiresAt,
-        locale: 'TODO',
-        //accessToken, idToken, refreshToken, user, expiresAt
-      };
+    if (restored) {
+      this.setSession(restored);
     }
-  }
 
-  // public
-
-  async openSession() {
-    await this.authenticationService.login();
-    await this.init();
-
-    this.emitSessionChange()
-  }
-
-  async closeSession() {
-    await this.authenticationService.logout();
-    this.session = undefined;
-
-    this.emitSessionChange()
-  }
-
-  /**
-   * retrieve a session locale value
-   * @param key the key
-   */
-  get<TYPE>(key: string): TYPE {
-    return this.session![key];
-  }
-
-  /**
-   * set a session locale value
-   * @param key the key
-   * @param value the value
-   */
-  set<TYPE>(key: string, value: TYPE): void {
-    this.session![key] = value;
-  }
-
-  /**
-   * return <code>true</code>, if there is an active session, <code>false</code> otherwise
-   */
-  hasSession(): boolean {
-    return this.session != undefined;
-  }
-
-  /**
-   * return the current session
-   */
-  currentSession(): Session<U, T> | undefined {
     return this.session;
   }
 
-  /**
-   * return the current user.
-   */
-  getUser(): U | undefined {
-    return this.session?.user;
+  hasSession(): boolean {
+    return this.session !== null;
+  }
+
+  currentSession(): Session<U, T> {
+    if (!this.session) {
+      throw new Error('No active session');
+    }
+    return this.session;
+  }
+
+  async openSession(request: AuthenticationRequest = {}): Promise<Session<U, T>> {
+    const session = await this.authentication.authenticate(request);
+    this.setSession(session);
+
+    return session;
+  }
+
+  async closeSession(): Promise<void> {
+    await this.authentication.logout();
+    
+    this.clearSession();
+  }
+
+  // protected
+
+  protected setSession(session: Session<U, T>) {
+    this.session = session;
+
+    this.events$.next({ type: 'opened', session });
+  }
+
+  protected clearSession() {
+    const session = this.session
+
+    this.session = null;
+    this.events$.next({ type: 'closed', session: session! });
   }
 }

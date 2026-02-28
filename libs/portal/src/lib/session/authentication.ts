@@ -1,32 +1,28 @@
-export interface Ticket {
-  accessToken: string,
-  idToken : string
-  refreshToken: string
-}
 
-export interface User {
-  given_name: string;
-  family_name: string;
-  email: string;
-  email_verified: string;
-  name: string;
-  preferred_username: string;
-  sub: string;
-
-  // did we forget something?
+export interface AuthenticationRequest {
+  user?: string;
+  password?: string;
 
   [prop: string]: any;
 }
 
-// basic authentication service
+export interface Ticket {
+  [prop: string]: any;
+}
 
-export interface AuthenticationService {
-  init(): Promise<void>;
-  login(): Promise<void>;
-  logout(): Promise<void>;
-  getIdToken(): string | null;
-  getAccessToken(): string | null;
-  getRefreshToken(): string | null;
-  isAuthenticated(): boolean;
-  getUserProfile(): User | null;
+export interface Session<U = any, T extends Ticket = Ticket> {
+  user: U;
+  ticket: T;
+  expiry?: number;
+  locale?: string;
+
+  [prop: string]: any;
+}
+
+export interface Authentication<U = any, T extends Ticket = Ticket> {
+ authenticate(request: AuthenticationRequest): Promise<Session<U, T>>;
+
+ init(): Promise<Session<U, T> | null>;
+
+ logout(): Promise<void>;
 }
