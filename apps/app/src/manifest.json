@@ -40,7 +40,7 @@
       "path": "/world",
       "component": "HelloFeature",
       "sourceFile": "apps/app/src/feature/world-feature.tsx",
-      "icon": "shell:add",
+      "icon": "add",
       "description": "world",
       "tags": [
         "menu"
@@ -58,7 +58,7 @@
       "path": "/hello",
       "component": "HelloFeature",
       "sourceFile": "apps/app/src/feature/hello-feature.tsx",
-      "icon": "shell:add",
+      "icon": "add",
       "description": "hello",
       "tags": [
         "menu"
@@ -77,7 +77,7 @@
       "path": "/",
       "component": "HomeFeature",
       "sourceFile": "apps/app/src/feature/home-feature.tsx",
-      "icon": "shell:add",
+      "icon": "home",
       "description": "home",
       "tags": [
       ],
