@@ -47,5 +47,8 @@
         "command": "typedoc --tsconfig libs/core/tsconfig.lib.json --out docs/libs/core"
       }
     }
+  },
+  "release": {
+    "outputPath": "dist/libs/core"
   }
 }
