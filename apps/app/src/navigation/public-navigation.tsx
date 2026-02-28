@@ -91,10 +91,8 @@ export class PublicNavigationFeature extends React.Component<
 
   render() {
     const deploymentManager = this.context.get(DeploymentManager);
-    const sessionManager = this.context.get(SessionManager);
     const { sidebarCollapsed, showModulesModal, hasSession } = this.state;
 
-    const user = sessionManager.getUser();
     const deployment = deploymentManager.deployment;
 
     const modules: Module[] = deployment

@@ -14,11 +14,12 @@ import {
   EmptyDeploymentLoader,
   LocalComponentLoader,
   PortalService, RemoteComponentLoader, I18NLoader,
-  KeycloakAuthenticationService,
   SessionManager,
-  AuthenticationService,
-  User,
-  SvgSpriteRegistry
+  Authentication,
+  SvgSpriteRegistry,
+  OIDCUser,
+  Session,
+  AuthenticationRequest
 } from '@novx/portal';
 
 import { AssetTranslationLoader, LocaleManager, LocalStorageLocaleBackingStore, Translator, TranslatorBuilder } from '@novx/i18n';
@@ -47,63 +48,39 @@ import manifest from './manifest.json';
 /**
  * No-op authentication service that returns a dummy user.
  */
-export class NoAuthenticationService implements AuthenticationService {
-  private dummyUser: User = {
-    id: 'dummy-user',
-    username: 'dummy',
-    email: 'dummy@example.com',
-    roles: ['user'],
-    given_name: '',
-    family_name: '',
-    email_verified: '',
-    name: '',
-    preferred_username: '',
-    sub: ''
-  };
-
-  async init(): Promise<void> {
-    // nothing to do
-    console.log('[NoAuthenticationService] init called');
-  }
-
-  async login(): Promise<void> {
-    console.log('[NoAuthenticationService] login called - automatically succeeds');
-  }
-
-  async logout(): Promise<void> {
-    console.log('[NoAuthenticationService] logout called - automatically succeeds');
-  }
-
-  getToken(): string | null {
-    return 'dummy-token';
-  }
-
-  getAccessToken(): string | null {
-    return 'dummy-access-token';
-  }
-
-  getIdToken(): string | null {
-    return 'dummy-id-token';
-  }
-
-  getRefreshToken(): string | null {
-    return 'dummy-refresh-token';
-  }
-
-  getUserProfile(): User | null {
-    return this.dummyUser;
-  }
-
-  isAuthenticated(): boolean {
-    return true;
-  }
+export class NoAuthenticationService implements Authentication<OIDCUser, any> {
+   async authenticate(request: AuthenticationRequest): Promise<Session<OIDCUser, any>> {
+    return {
+      user: {
+        id: 'dummy-user',
+        username: 'dummy',
+        email: 'dummy@example.com',
+        roles: ['user'],
+        given_name: '',
+        family_name: '',
+        email_verified: '',
+        name: '',
+        preferred_username: '',
+        sub: ''
+      },
+      ticket: {}
+    }
+   }
+  
+   async init(): Promise<Session<OIDCUser, any> | null> {
+    return null;
+   }
+    
+   async logout(): Promise<void> {
+    // noope
+   }
 }
 
 // tracing
 
 new Tracer({
-  enabled: false,
-  trace: new ConsoleTrace('%d [%p]: %m\n'), // %f
+  enabled: true,
+  trace: new ConsoleTrace('%d [%p]: %m %f\n'), // %f
   paths: {
     application: TraceLevel.FULL,
     di: TraceLevel.FULL,
@@ -160,7 +137,7 @@ export class ApplicationModule extends AbstractModule {
 
   @create()
   createDeploymentLoader(portalService: PortalService) : DeploymentLoader {
-    let load = 'remote';
+    let load = 'nix';
 
     if (load == 'service')
       return new ServiceDeploymentLoader(portalService);
@@ -175,22 +152,12 @@ export class ApplicationModule extends AbstractModule {
 
   @create()
   createDeploymentManager(loader: DeploymentLoader, featureRegistry: FeatureRegistry) : DeploymentManager {
-      return new DeploymentManager(
-        featureRegistry,
-        loader,
-        manifest as unknown as Manifest,
-        new ManifestProcessor(),
-
-        (permission: string) => {
-          console.log('check permission ' + permission);
-          return true;
-        },
-
-        (feature: string) => {
-          console.log('check feature ' + feature);
-          return true;
-        },
-      );
+      return new DeploymentManager({
+        featureRegistry: featureRegistry,
+        loader: loader,
+        localManifest: manifest as Manifest,
+        processor: new ManifestProcessor()
+      });
   }
 
   @create()
@@ -247,7 +214,7 @@ export class ApplicationModule extends AbstractModule {
 
     // session manager
 
-    await this.get(SessionManager).init();
+    await this.get(SessionManager).start();
 
     // done
 

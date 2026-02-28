@@ -94,7 +94,7 @@ export class Navigation extends React.Component<
     const sessionManager = this.context.get(SessionManager);
     const { sidebarCollapsed, showModulesModal, hasSession } = this.state;
 
-    const user = sessionManager.getUser();
+    const user = sessionManager.currentSession()?.user;
     const deployment = deploymentManager.deployment;
 
     const modules: Module[] = deployment

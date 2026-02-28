@@ -45,8 +45,7 @@
       "permissions": [],
       "features": [],
       "visibility": [
-        "private",
-        "public"
+        "private"
       ],
       "children": []
     },
