@@ -5,7 +5,7 @@ As part of the Novx Monorepo, Core provides basic infrastructural elements, whic
 - an integrated aop solution
 - handling of configuration values
 - error handling
-- tracing
+- tracing support
 
 ## Building
 
