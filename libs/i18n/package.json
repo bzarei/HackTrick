@@ -16,6 +16,7 @@
   "module": "./index.esm.js",
   "types": "./index.d.ts",
   "publishConfig": {
+    "directory": "dist/libs/i18n",
     "access": "public"
   },
   "exports": {
