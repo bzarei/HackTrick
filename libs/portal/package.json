@@ -1,6 +1,6 @@
 {
   "name": "@novx/portal",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Portal library",
   "homepage": "https://github.com/coolsamson7/novx",
   "repository": {
@@ -41,9 +41,9 @@
     "lint": "nx lint portal"
   },
   "dependencies": {
-    "@novx/core": "0.2.2",
-    "@novx/i18n": "0.2.2",
-    "@novx/communication": "0.2.2",
+    "@novx/core": "0.2.3",
+    "@novx/i18n": "0.2.3",
+    "@novx/communication": "0.2.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "axios": "^1.13.5"
