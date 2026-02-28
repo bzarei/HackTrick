@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { catchError, forkJoin, lastValueFrom, map, Observable, of, shareReplay, switchMap, tap } from 'rxjs';
 import { fromFetch } from 'rxjs/fetch';
-import { Observable as Obs } from 'rxjs';
 import { SourceMapConsumer } from 'source-map-js';
 
 const UNKNOWN_FUNCTION = '<unknown>';
@@ -92,11 +91,13 @@ function determineParser(): Parser {
 /**
  * Decodes a base64 string in both browser (atob) and Node (Buffer).
  */
-function decodeBase64(encoded: string): string {
-  if (typeof atob === 'function') {
-    return atob(encoded);
+export function decodeBase64(encoded: string): string {
+  if (typeof globalThis.atob === 'function') {
+    return new TextDecoder().decode(
+      Uint8Array.from(globalThis.atob(encoded), c => c.charCodeAt(0))
+    );
   }
-  return Buffer.from(encoded, 'base64').toString('utf-8');
+  throw new Error('Base64 decoding is not supported in this environment');
 }
 
 /**

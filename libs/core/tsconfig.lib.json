@@ -10,7 +10,8 @@
     "module": "esnext",
     "target": "es2022",
     "moduleResolution": "node",
-    "strict": true
+    "strict": true,
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"],
   "exclude": [

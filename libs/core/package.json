@@ -12,18 +12,18 @@
   },
   "license": "Apache-2.0",
   "type": "module",
-  "main": "dist/libs/core/index.js",
-  "module": "dist/libs/core/index.esm.js",
-  "types": "dist/libs/core/index.d.ts",
+  "main": "./index.js",
+  "module": "./index.esm.js",
+  "types": "./index.d.ts",
   "publishConfig": {
     "access": "public"
   },
   "exports": {
     ".": {
-      "types": "./dist/libs/core/index.d.ts",
-      "import": "./dist/libs/core/index.esm.js",
-      "require": "./dist/libs/core/index.js",
-      "default": "./dist/libs/core/index.esm.js"
+      "types": "./index.d.ts",
+      "import": "./index.esm.js",
+      "require": "./index.js",
+      "default": "./index.esm.js"
     },
     "./package.json": "./package.json"
   },
