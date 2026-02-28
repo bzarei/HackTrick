@@ -1,6 +1,6 @@
 {
   "name": "@novx/communication",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Communication library",
   "homepage": "https://github.com/coolsamson7/novx",
   "repository": {
@@ -40,7 +40,7 @@
     "lint": "nx lint communication"
   },
   "dependencies": {
-    "@novx/core": "0.2.1",
+    "@novx/core": "0.2.2",
     "axios": "^1.13.5"
   },
   "devDependencies": {}
