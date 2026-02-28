@@ -23,16 +23,13 @@ const styles = {
 })
 export class HomePage extends React.Component {
   render() {
-    return (
-      <main>
-        <h1 style={styles.title}>Welcome to NovX</h1>
-        <p style={styles.subtitle}>
-          Your microfrontend is up and running 🚀
-        </p>
-        <button style={styles.button} onClick={() => alert("Hello!")}>
-          Get Started
-        </button>
-      </main>
-    );
+     return <div  style={{
+            fontSize: '32px',
+            fontWeight: 'bold',
+            margin: '24px',
+            textAlign: 'center'
+          }}>
+          HOME SWEET HOME
+        </div>;
   }
 }
