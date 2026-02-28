@@ -4,7 +4,7 @@ import {  Feature } from '@novx/portal';
 
 @Feature({
   id: "world",
-  label: "world",
+  i18n: "world",
   path: "/world",
   icon: "shell:add",
   description: "world",

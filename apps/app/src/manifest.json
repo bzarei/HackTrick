@@ -2,9 +2,11 @@
   "id": "shell",
   "label": "Shell",
   "version": "1.0.0",
+  "preloadI18n": ["portal"],
   "features": [
     {
       "id": "public-navigation",
+      "preloadI18n": ["portal"],
       "label": "Navigation",
       "path": "/",
       "component": "PublicNavigationFeature",
@@ -19,6 +21,7 @@
     },
     {
       "id": "private-navigation",
+      "preloadI18n": ["portal"],
       "label": "Navigation",
       "path": "/",
       "component": "Navigation",
@@ -33,7 +36,7 @@
     },
     {
       "id": "world",
-      "label": "world",
+      "i18n": "world",
       "path": "/world",
       "component": "HelloFeature",
       "sourceFile": "apps/app/src/feature/world-feature.tsx",
@@ -51,7 +54,7 @@
     },
     {
       "id": "hello",
-      "label": "hello",
+      "i18n": "hello",
       "path": "/hello",
       "component": "HelloFeature",
       "sourceFile": "apps/app/src/feature/hello-feature.tsx",
@@ -70,7 +73,7 @@
     },
         {
       "id": "home",
-      "label": "home",
+      "i18n": "home",
       "path": "/",
       "component": "HomeFeature",
       "sourceFile": "apps/app/src/feature/home-feature.tsx",

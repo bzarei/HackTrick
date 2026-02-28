@@ -12,7 +12,7 @@ const styles = {
 
 @Feature({
   id: "home",
-  label: "home",
+  i18n: "home",
   path: "/",
   icon: "shell:add",
   description: "home",

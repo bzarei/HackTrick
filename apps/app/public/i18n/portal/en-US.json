@@ -1,5 +1,11 @@
 {
-  "users": {
-    "label": "Benutzer"
+  "hello": {
+    "label": "Hello"
+  },
+  "world": {
+    "label": "World"
+  },
+  "home": {
+    "label": "Home"
   }
 }
