@@ -11,10 +11,9 @@ import { TraceLevel, Tracer } from '@novx/core';
 import { SessionManager } from './session/session-manager';
 import { useInject } from "./environment";
 import { ErrorPage } from "./component/error-page";
+import { hasLift } from "rxjs/internal/util/lift";
 
-/* ======================================================
- * PrivateRoute Component - checks session status
- * ====================================================== */
+// guard for private routes
 
 const PrivateRoute: React.FC<{ feature: FeatureMetadata; children: React.ReactNode }> = ({ feature, children }) => {
   const [sessionManager] = useInject(SessionManager);
@@ -34,7 +33,9 @@ const PrivateRoute: React.FC<{ feature: FeatureMetadata; children: React.ReactNo
   }, [sessionManager]);
 
   React.useEffect(() => {
-    if (!hasSession) {
+    const isActive = location.pathname === feature.path;
+
+    if (!hasSession && isActive) {
       sessionStorage.setItem('intendedRoute', window.location.pathname);
 
       sessionManager.openSession().catch((err: any) => {
@@ -53,10 +54,6 @@ const PrivateRoute: React.FC<{ feature: FeatureMetadata; children: React.ReactNo
 
   return <>{children}</>;
 };
-
-/* ======================================================
- * Extended RouteObject with $feature
- * ====================================================== */
 
 export type RouteObjectWithFeature = RouteObject & {
   $feature: FeatureMetadata;
@@ -113,11 +110,13 @@ const RoutesWrapper: React.FC<{ manager: RouterManager }> = ({ manager }) => {
   });
 
   React.useEffect(() => {
-    sessionManager.events$.subscribe(() => {
-      // Recompute root (may differ after login / logout)
-      manager.root = manager.computeRoot();
-      // Rebuild and push into state atomically
-      setRoutes(manager.buildRouteObjects(manager.root));
+    sessionManager.events$.subscribe((event) => {
+      if ( event.type == "closed" || event.type == "opened" ) {
+          // Recompute root (may differ after login / logout)
+          manager.root = manager.computeRoot();
+          // Rebuild and push into state atomically
+          setRoutes(manager.buildRouteObjects(manager.root));
+      }
     });
   }, [sessionManager]);
 
@@ -131,6 +130,7 @@ const RoutesWrapper: React.FC<{ manager: RouterManager }> = ({ manager }) => {
 @injectable()
 export class RouterManager {
   // instance data — made accessible to RoutesWrapper above
+
   routeObjects: RouteObjectWithFeature[] = [];
   private featureListeners = new Set<FeatureChangeListener>();
 
@@ -139,14 +139,12 @@ export class RouterManager {
     component: ""
   });
 
-  root: FeatureMetadata = {
-    id: "",
-    component: ""
-  };
+  root: FeatureMetadata = this.computeRoot()
 
   // constructor
 
-  constructor(private featureRegistry: FeatureRegistry) {}
+  constructor(private featureRegistry: FeatureRegistry, private sessionManager: SessionManager) {
+  }
 
   // public
 
@@ -175,12 +173,14 @@ export class RouterManager {
     if (Tracer.ENABLED)
       Tracer.Trace('portal', TraceLevel.HIGH, 'building routes');
 
+    const hasSession = this.sessionManager.hasSession()
+
     const features = this.featureRegistry.filter((f) => true);
 
     const build = (feature: FeatureMetadata): RouteObjectWithFeature => {
-      const isPrivate = feature.visibility && feature.visibility.includes('private');
+      const isPrivate = feature.visibility && feature.visibility.includes('private') && !feature.visibility.includes('public');
 
-      const element = isPrivate ? (
+      const element = (isPrivate && !hasSession) ? (
         <PrivateRoute feature={feature}>
           <FeatureOutlet featureId={feature.id} />
         </PrivateRoute>
@@ -202,7 +202,7 @@ export class RouterManager {
     this.routeObjects = [
       {
         path: root.path || '',
-        element: <FeatureOutlet featureId={root.id} />,
+        element: <FeatureOutlet key={root.id} featureId={root.id} />,
         $feature: root,
         children: [
           ...features
