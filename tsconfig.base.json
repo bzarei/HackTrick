@@ -18,6 +18,7 @@
       "@novx/portal": ["dist/libs/portal"]
     },
     "sourceMap": true,
+    "inlineSources": true,
     "importHelpers": true,
     "isolatedModules": true,
     "lib": ["es2022", "dom"],
