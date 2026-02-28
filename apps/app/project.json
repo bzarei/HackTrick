@@ -30,7 +30,7 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:eslint",
+      "executor": "@nx/eslint:lint",
       "options": {
         "lintFilePatterns": ["apps/app/**/*.ts", "apps/app/**/*.tsx"]
       }

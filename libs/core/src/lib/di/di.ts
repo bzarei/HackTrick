@@ -1436,15 +1436,18 @@ class ResolveContext {
 }
 
 /**
- * Environment class for managing DI container
+ * Environment configuration options
  */
 
- interface EnvironmentOptions {
+interface EnvironmentOptions {
    module?: any;
    features?: string[];
    parent?: Environment
- }
+}
 
+/**
+ * Environment is th emain DI container.
+ */
 export class Environment {
   // static data
 
