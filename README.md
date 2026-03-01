@@ -1,6 +1,7 @@
 # NOVX
 
 ![CI](https://github.com/coolsamson7/novx/actions/workflows/ci.yml/badge.svg)
+<img width="1024" height="1024" alt="image" src="https://github.com/user-attachments/assets/0b7293e9-23d9-4a71-ac84-a6fdff3dff3b" />
 
 ## Overview 
 
