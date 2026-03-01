@@ -16,17 +16,18 @@ export function I18NProvider(props: any) {
   const [counter, setCounter] = useState(0)
 
   // stable translate function
+
   const translate = useMemo(() => {
-    return (key: string, params?: any): string => {
-      let translation = translator.translate(key)
+      return (key: string, params?: any): string => {
+        let translation = translator.translate(key)
 
-      if (params) {
-        translation = interpolator.interpolate(translation, params)
+        if (params) {
+          translation = interpolator.interpolate(translation, params)
+        }
+
+        return translation
       }
-
-      return translation
-    }
-  }, [translator, interpolator])
+  }, [translator, interpolator, counter])
 
   useEffect(() => {
     const subscription = translator
