@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Environment } from '@novx/core';
-import { DeploymentManager, EnvironmentContext, Feature, RouterManager } from '@novx/portal';
+import { DeploymentManager, EnvironmentContext, Feature, I18NProvider, RouterManager } from '@novx/portal';
 
 
 export class App extends React.Component {
@@ -34,7 +34,9 @@ export class App extends React.Component {
         // render the router with lazy FeatureOutlets
 
         return (
-            this.routerManager.renderRouter()
+            <I18NProvider>
+             {this.routerManager.renderRouter()}
+            </I18NProvider>
         );
     }
 }
