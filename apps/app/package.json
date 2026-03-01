@@ -6,9 +6,13 @@
     "build": "nx build app"
   },
   "dependencies": {
-    "@novx/core": "*",
-    "@novx/portal": "*",
-    "@novx/communication": "*",
-    "@novx/i18n": "*"
+    "@novx/communication": "workspace:*",
+    "@novx/core": "workspace:*",
+    "@novx/i18n": "workspace:*",
+    "@novx/portal": "workspace:*"
+  },
+  "devDependencies": {
+    "html-webpack-plugin": "^5.6.6",
+    "ts-loader": "^9.5.4"
   }
 }

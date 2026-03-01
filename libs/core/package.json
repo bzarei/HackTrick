@@ -40,6 +40,7 @@
     "test": "nx test core",
     "lint": "nx lint core"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "source-map-js": "^1.2.1"
+  }
 }

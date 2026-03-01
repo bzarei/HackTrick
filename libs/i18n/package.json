@@ -43,7 +43,8 @@
   "dependencies": {
     "@swc/helpers": "~0.5.18",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "@novx/core": "workspace:*"
   },
   "devDependencies": {}
 }

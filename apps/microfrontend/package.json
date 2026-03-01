@@ -6,9 +6,9 @@
     "build": "nx build microfrontend"
   },
   "dependencies": {
-    "@novx/core": "*",
-    "@novx/portal": "*",
-    "@novx/communication": "*",
-    "@novx/i18n": "*"
+    "@novx/core": "workspace:*",
+    "@novx/portal": "workspace:*",
+    "@novx/communication": "workspace:*",
+    "@novx/i18n": "workspace:*"
   }
 }

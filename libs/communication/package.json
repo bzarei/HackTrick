@@ -41,7 +41,7 @@
     "lint": "nx lint communication"
   },
   "dependencies": {
-    "@novx/core": "0.2.3",
+    "@novx/core": "workspace:*",
     "axios": "^1.13.5"
   },
   "devDependencies": {}

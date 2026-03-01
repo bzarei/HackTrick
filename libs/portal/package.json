@@ -41,12 +41,21 @@
     "lint": "nx lint portal"
   },
   "dependencies": {
-    "@novx/core": "0.2.3",
-    "@novx/i18n": "0.2.3",
-    "@novx/communication": "0.2.3",
+    "@novx/communication": "workspace:*",
+    "@novx/core": "workspace:*",
+    "@novx/i18n": "workspace:*",
+    "axios": "^1.13.5",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2",
-    "axios": "^1.13.5"
+    "rxjs": "^7.8.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.4",
+    "react-router-dom": "^7.13.1"
+  },
+  "peerDependencies": {
+    "react": "^19.2.4",
+    "react-router-dom": "^7.13.1"
+  }
 }
