@@ -1,7 +1,5 @@
 import "reflect-metadata"
 
-import {  aspect, after, before, error } from "./decorator"
-
 import { methods } from "./aspect-target"
 import { ConsoleTrace, TraceLevel, Tracer } from "../tracer"
 
@@ -109,6 +107,7 @@ class Aspects {
 }
 
 import { AdviceProcessor } from "./advice-processor"    
+import { after, aspect, before, error } from "./aspect"
 
 const a = AdviceProcessor;
 

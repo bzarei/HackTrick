@@ -30,11 +30,10 @@
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "outputs": ["{workspaceRoot}/coverage/libs/i18n"],
       "options": {
-        "jestConfig": "libs/i18n/jest.config.cts",
-        "passWithNoTests": true
+        "configFile": "libs/i18n/vitest.config.ts"
       }
     },
     "lint": {

@@ -37,14 +37,13 @@
         "outDir": "dist/libs/portal",
         "outputPath": "dist/libs/portal",
         "main": "dist/libs/portal/index.js"
-      },
+      }
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "outputs": ["{workspaceRoot}/coverage/libs/portal"],
       "options": {
-        "jestConfig": "libs/portal/jest.config.cts",
-        "passWithNoTests": true
+        "configFile": "libs/portal/vitest.config.ts"
       }
     },
     "lint": {

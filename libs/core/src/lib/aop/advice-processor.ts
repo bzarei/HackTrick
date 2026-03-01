@@ -1,7 +1,7 @@
 import { Environment, injectable, PostProcessor } from "../di";
-import { AdviceAspect } from "./aspect/";
 
-import { Aspect } from "./aspect";
+
+import { AdviceAspect, Aspect } from "./aspect";
 import { AspectInfo, AspectManager } from "./aspect-manager";
 
 @injectable({module: "boot", scope: "environment"})

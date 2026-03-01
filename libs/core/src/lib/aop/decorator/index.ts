@@ -1,5 +1,0 @@
-export * from "./after.decorator"
-export * from "./around.decorator"
-export * from "./aspect.decorator"
-export * from "./before.decorator"
-export * from "./error.decorator"

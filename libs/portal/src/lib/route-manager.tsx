@@ -11,7 +11,6 @@ import { TraceLevel, Tracer } from '@novx/core';
 import { SessionManager } from './session/session-manager';
 import { useInject } from "./environment";
 import { ErrorPage } from "./component/error-page";
-import { hasLift } from "rxjs/internal/util/lift";
 
 // guard for private routes
 

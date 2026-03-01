@@ -39,11 +39,10 @@
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "outputs": ["{workspaceRoot}/coverage/libs/communication"],
       "options": {
-        "jestConfig": "libs/communication/jest.config.cts",
-        "passWithNoTests": true
+        "configFile": "libs/communication/vitest.config.ts"
       }
     },
     "lint": {

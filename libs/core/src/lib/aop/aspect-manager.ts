@@ -1,10 +1,8 @@
-
-import { AdviceAspect, MethodAspect } from "./aspect/index"
 import { JoinPoint } from "./join-point"
 import { MethodDescriptor, TypeDescriptor } from "../reflection"
 import { Invocation } from "./invocation"
 import { TraceLevel, Tracer } from "../tracer"
-import { Aspect } from "./aspect"
+import { AdviceAspect, Aspect, MethodAspect } from "./aspect"
 import { AspectType } from "./aspect-type.enum"
 import { AdviceProcessor } from "./advice-processor"
 
@@ -23,16 +21,16 @@ export interface AspectInfo {
     wrappedMethods: { [name: string]: JoinPoints }
 }
 
-export type Predicate = (key: string) => boolean
+
 
 export class AspectManager {
     // static data
 
-    static accept: Predicate = (key: string) => true
+    static accept: (key: string) => boolean = (key: string) => true
 
     // static methods
 
-    public static acceptConfig(predicate: Predicate) {
+    public static acceptConfig(predicate: (key: string) => boolean) {
         AspectManager.accept = predicate
     }
 
