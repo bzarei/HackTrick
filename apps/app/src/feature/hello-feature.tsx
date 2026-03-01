@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {  EnvironmentContext, Feature, useI18N } from '@novx/portal';
+import {  EnvironmentContext, Feature, I18N, I18NContext, useI18N } from '@novx/portal';
 import { Environment } from '@novx/core';
 import { Translator } from '@novx/i18n';
 
@@ -16,13 +16,11 @@ import { Translator } from '@novx/i18n';
   visibility: ["private", "public"]
 })
 class HelloFeature extends React.Component {
-  static contextType = EnvironmentContext;
-  declare context: Environment;
+  static contextType = I18NContext
+   declare context: I18N;
 
   render() {
-    const translator = this.context.get(Translator)
-
-   
+    const { tr } = this.context
 
     return <div  style={{
         fontSize: '32px',
@@ -30,7 +28,7 @@ class HelloFeature extends React.Component {
         margin: '24px',
         textAlign: 'center'
       }}>
-      {translator.translate("portal:hello.label")}
+      {tr("portal:hello.label")}
     </div>;
   }
 }
