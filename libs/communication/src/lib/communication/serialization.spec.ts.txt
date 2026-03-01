@@ -9,7 +9,7 @@ interface Bar {
 enum Color {
     RED = 1,
     GREEN,
-    BLUE,
+    BLUE
 }
 
 schema("Color", enumeration(Color))

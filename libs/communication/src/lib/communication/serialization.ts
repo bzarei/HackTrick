@@ -223,10 +223,10 @@ export class ObjectSerialization extends AbstractTypeSerialization<any, any> {
             //TODO if (propertyConstraint.params4("format")) format = propertyConstraint.params4("format")?.format
 
             this.format.push(format)
-            // @ts-expect-error
+            // @ts-expect-error: dunno
             this.types.push(type)
             this.properties.push(property)
-            // @ts-expect-error
+            // @ts-expect-error: dunno
             this.operations.push(serialization.fromConstraint(type))
         } // for
 

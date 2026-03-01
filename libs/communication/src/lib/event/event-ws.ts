@@ -531,7 +531,7 @@ export function useEventWebSocket(
     const React = (window as any).React;
     const { useState, useEffect } = React;
 
-    // @ts-expect-error    
+    // @ts-expect-error: dunno    
     const [client, setClient] = useState<EventWebSocketClient | null>(null);
     const [connected, setConnected] = useState(false);
 
