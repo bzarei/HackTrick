@@ -36,11 +36,10 @@
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "outputs": ["{workspaceRoot}/coverage/apps/microfrontend"],
       "options": {
-        "jestConfig": "apps/microfrontend/jest.config.ts",
-        "passWithNoTests": true
+        "configFile": "apps/microfrontend/vitest.config.ts"
       }
     }
   },

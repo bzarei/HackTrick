@@ -59,7 +59,7 @@ export class PlaceholderParser {
           else value = +value;
         }
 
-        // @ts-ignore
+        // @ts-expect-error: dunno
         formatParameter[parameter] = value;
       }
 

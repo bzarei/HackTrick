@@ -36,11 +36,10 @@
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vitest:test",
       "outputs": ["{workspaceRoot}/coverage/apps/app"],
       "options": {
-        "jestConfig": "apps/app/jest.config.ts",
-        "passWithNoTests": true
+        "configFile": "apps/app/vitest.config.ts"
       }
     }
   },

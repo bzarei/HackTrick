@@ -19,7 +19,9 @@ class NoBackingStore implements LocaleBackingStore {
     return undefined
   }
 
-  setLocale(_: Intl.Locale): void {}
+  setLocale(_: Intl.Locale): void {
+      // noop
+   }
 }
 
 /**

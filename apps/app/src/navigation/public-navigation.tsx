@@ -29,7 +29,7 @@ const ReactiveOutlet: React.FC = () => {
   path: '/',
 })
 export class PublicNavigationFeature extends React.Component<
-  {},
+  object,
   { sidebarCollapsed: boolean; currentPath: string; showModulesModal: boolean; hasSession: boolean }
 > {
   private unsubscribe?: () => void;
