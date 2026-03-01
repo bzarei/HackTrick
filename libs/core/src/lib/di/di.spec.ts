@@ -267,14 +267,14 @@ describe('Dependency Injection', () => {
   });
 
   it('should support inherited environments', () => {
-    console.log(environment.report());
+    //console.log(environment.report());
 
     const foo = environment.get<Foo>(Foo);
     const environmentFoo = environment.get(EnvironmentFoo);
 
     const childEnvironment = new Environment({module: ChildModule, parent: environment});
 
-    console.log(childEnvironment.report())
+    //console.log(childEnvironment.report())
 
     const childFoo = childEnvironment.get(Foo);
     const childEnvironmentFoo = childEnvironment.get(EnvironmentFoo);

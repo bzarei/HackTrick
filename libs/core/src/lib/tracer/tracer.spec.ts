@@ -13,7 +13,7 @@ class TestTrace extends Trace {
     // constructor
 
     constructor() {
-        super(new TraceFormatter("%d [%p]: %m %f\n"))
+        super(new TraceFormatter("%d [%p]: %m\n"))
     }
 
     // implement Trace
