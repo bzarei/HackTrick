@@ -54,6 +54,10 @@ class Test extends Base {
         // noope
     }
 
+    override f() {
+            // noop
+    }
+
     baz(): Promise<number> {
         return Promise.resolve<number>(1)
     }
@@ -63,7 +67,7 @@ describe("TypeDescriptor", () => {
     it("should analyze", () => {
         const descriptor = TypeDescriptor.forType(Test)
 
-        //console.log(descriptor)
+        console.log(descriptor)
 
         // descriptor
 

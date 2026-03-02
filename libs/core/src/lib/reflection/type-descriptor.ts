@@ -28,6 +28,13 @@ export abstract class PropertyDescriptor {
         return this.decorators.find(spec => spec.decorator === decorator)
     }
 
+    mergeDecoratorsFrom(parent: PropertyDescriptor) {
+        for (const parentDec of parent.decorators) {
+            if (!this.decorators.some(d => d.decorator === parentDec.decorator)) {
+                this.decorators.push(parentDec)
+            }
+        }
+    }
 
     abstract report(builder: StringBuilder): void
 }
@@ -38,15 +45,12 @@ export interface DecoratorDescriptor {
 }
 
 export class MethodDescriptor extends PropertyDescriptor {
-    // instance data
-
     public async = false
 
     get paramTypes(): any[] {
         if (this.type === PropertyType.CONSTRUCTOR) {
             return Reflect.getMetadata('design:paramtypes', this.owner) || []
         }
-
         return Reflect.getMetadata(
             'design:paramtypes',
             this.owner.prototype,
@@ -58,15 +62,12 @@ export class MethodDescriptor extends PropertyDescriptor {
         if (this.type === PropertyType.CONSTRUCTOR) {
             return this.owner
         }
-
         return Reflect.getMetadata(
             'design:returntype',
             this.owner.prototype,
             this.name
         )
     }
-
-    // constructor
 
     constructor(
         name: string,
@@ -75,11 +76,8 @@ export class MethodDescriptor extends PropertyDescriptor {
         private owner: GType<any>
     ) {
         super(name, type)
-
         this.async = method.constructor.name === 'AsyncFunction'
     }
-
-    // public
 
     report(builder: StringBuilder): void {
         for (const spec of this.decorators)
@@ -122,32 +120,31 @@ export interface Decorator<T = any> {
     decorate(type: TypeDescriptor<T>, instance: T): void
 }
 
-
-
 export class TypeDescriptor<T> {
-    // Static factory
-
     static forType<T>(type: GType<T>): TypeDescriptor<T> {
         const proto = type.prototype as any
-        if (!proto.__descriptor)
-           proto.__descriptor = new TypeDescriptor<T>(type)
-
+        if (!Object.prototype.hasOwnProperty.call(proto, '__descriptor')) {
+            proto.__descriptor = new TypeDescriptor<T>(type)
+        }
         return proto.__descriptor
     }
 
-    // instance data
-
+    public parent?: TypeDescriptor<any>
     public decorators: DecoratorDescriptor[] = []
     private properties: Record<string, PropertyDescriptor> = {}
 
-    // constructor
-
     private constructor(public type: GType<T>) {
         if (Tracer.ENABLED) Tracer.Trace("type", TraceLevel.HIGH, "create type descriptor for {0}", type.name)
-        this.analyze(type)
-    }
 
-    // public
+        // assign parent descriptor if superclass exists
+        const parentProto = Object.getPrototypeOf(type.prototype)
+        if (parentProto && parentProto.constructor !== Object) {
+            this.parent = TypeDescriptor.forType(parentProto.constructor)
+        }
+
+        this.analyzeStructure(type)
+        this.inheritFromParent()
+    }
 
     public create(...args: any[]): T {
         return new this.type(...args)
@@ -155,7 +152,6 @@ export class TypeDescriptor<T> {
 
     public addDecorator(decorator: Function, ...args: any[]): this {
         this.decorators.push({decorator, arguments: args})
-
         return this
     }
 
@@ -167,7 +163,6 @@ export class TypeDescriptor<T> {
         return this.decorators.find(d => d.decorator === decorator)
     }
 
-
     public addMethodDecorator(target: any, property: string, decorator: Function, ...args: any[]): this {
         let method = this.getMethod(property)
         if (!method) {
@@ -177,10 +172,7 @@ export class TypeDescriptor<T> {
                 this.properties[property] = method
             }
         }
-
-        if (method) {
-            method.addDecorator(decorator, args)
-        }
+        if (method) method.addDecorator(decorator, args)
         return this
     }
 
@@ -191,9 +183,7 @@ export class TypeDescriptor<T> {
             this.properties[property] = descriptor
             descriptor.propertyType = Reflect.getMetadata('design:type', target, property)
         }
-
         descriptor.addDecorator(decorator, args)
-
         return this
     }
 
@@ -223,37 +213,27 @@ export class TypeDescriptor<T> {
         return p instanceof FieldDescriptor ? p : undefined
     }
 
-    private analyze(type: GType<T>) {
-
-        // constructor descriptor
+    /** Step 1: analyze only current type's structure */
+    private analyzeStructure(type: GType<T>) {
         this.properties['constructor'] =
             new MethodDescriptor('constructor', type, PropertyType.CONSTRUCTOR, type)
 
-        // 🔥 walk prototype chain for inheritance
         let proto = type.prototype
-
         while (proto && proto !== Object.prototype) {
-
             const descriptors = Object.getOwnPropertyDescriptors(proto)
-
             for (const key of Object.keys(descriptors)) {
                 if (key === 'constructor') continue
-
                 const desc = descriptors[key]
-
                 if (typeof desc.value === 'function') {
-                    // method
                     if (!this.properties[key]) {
-                        this.properties[key] =
-                            new MethodDescriptor(
-                                key,
-                                desc.value,
-                                PropertyType.METHOD,
-                                proto.constructor as GType<any> // use the actual owner
-                            )
+                        this.properties[key] = new MethodDescriptor(
+                            key,
+                            desc.value,
+                            PropertyType.METHOD,
+                            proto.constructor as GType<any>
+                        )
                     }
                 } else {
-                    // field
                     if (!this.properties[key]) {
                         const fieldDesc = new FieldDescriptor(key)
                         fieldDesc.propertyType = Reflect.getMetadata('design:type', proto, key)
@@ -261,11 +241,22 @@ export class TypeDescriptor<T> {
                     }
                 }
             }
-
             proto = Object.getPrototypeOf(proto)
         }
     }
 
+    /** Step 2: inherit decorators from parent TypeDescriptor */
+    private inheritFromParent() {
+        if (!this.parent) return
+
+        for (const key of Object.keys(this.properties)) {
+            const childProp = this.properties[key]
+            const parentProp = this.parent.properties[key]
+            if (childProp && parentProp) {
+                childProp.mergeDecoratorsFrom(parentProp)
+            }
+        }
+    }
 
     public toString(): string {
         const builder = new StringBuilder()
