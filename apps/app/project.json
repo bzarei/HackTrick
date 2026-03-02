@@ -18,16 +18,40 @@
         "main": "apps/app/src/main.tsx",
         "tsConfig": "apps/app/tsconfig.app.json",
         "index": "apps/app/src/index.html",
-        "webpackConfig": "apps/app/webpack.config.js"
-      }
+        "webpackConfig": "apps/app/webpack.config.js",
+        "optimization": false,
+        "sourceMap": true
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true,
+          "inspect": false
+        },
+        "development": {
+          "optimization": false,
+          "sourceMap": true
+        }
+      },
+      "defaultConfiguration": "development"
     },
     "serve": {
       "executor": "@nx/webpack:dev-server",
       "options": {
-        "buildTarget": "app:build",
+        "buildTarget": "app:build:development",
         "host": "localhost",
         "port": 3000
-      }
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "app:build:production"
+        },
+        "development": {
+          "buildTarget": "app:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
     },
     "lint": {
       "executor": "@nx/eslint:lint",
