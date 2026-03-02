@@ -35,6 +35,9 @@ import {
   Environment,
   create,
   onRunning,
+  Trace,
+  TraceEntry,
+  TraceFormatter,
 } from '@novx/core';
 
 import {
@@ -44,6 +47,26 @@ import {
 } from '@novx/communication';
 
 import manifest from './manifest.json';
+
+export class FooterTrace extends Trace {
+  static entries : TraceEntry[] = []
+  
+  // constructor
+
+  constructor(messageFormat: string) {
+    super(new TraceFormatter(messageFormat));
+  }
+
+  // implement Trace
+
+  /**
+   * @inheritDoc
+   */
+  trace(entry: TraceEntry): void {
+    FooterTrace.entries.push(entry)
+  }
+}
+
 
 /**
  * No-op authentication service that returns a dummy user.
@@ -80,7 +103,7 @@ export class NoAuthenticationService implements Authentication<OIDCUser, any> {
 
 new Tracer({
   enabled: true,
-  trace: new ConsoleTrace('%d [%p]: %m %f\n'), // %f
+  trace: new FooterTrace('%d [%p]: %m %f\n'), // %f
   paths: {
     application: TraceLevel.FULL,
     di: TraceLevel.FULL,
@@ -137,7 +160,7 @@ export class ApplicationModule extends AbstractModule {
 
   @create()
   createDeploymentLoader(portalService: PortalService) : DeploymentLoader {
-    let load = 'nix';
+    let load = 'remote';
 
     if (load == 'service')
       return new ServiceDeploymentLoader(portalService);

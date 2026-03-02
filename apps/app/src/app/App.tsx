@@ -2,6 +2,8 @@ import React from 'react';
 
 import { Environment } from '@novx/core';
 import { DeploymentManager, EnvironmentContext, Feature, I18NProvider, RouterManager } from '@novx/portal';
+import TraceFooter from '../component/trace-footer';
+import { FooterTrace } from '../module';
 
 
 export class App extends React.Component {
@@ -36,6 +38,7 @@ export class App extends React.Component {
         return (
             <I18NProvider>
              {this.routerManager.renderRouter()}
+             <TraceFooter entries={FooterTrace.entries}></TraceFooter>
             </I18NProvider>
         );
     }
