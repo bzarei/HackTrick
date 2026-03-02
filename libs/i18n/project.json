@@ -48,8 +48,5 @@
         "command": "typedoc --tsconfig libs/i18n/tsconfig.lib.json --out docs/libs/i18n"
       }
     }
-  },
-  "release": {
-    "outputPath": "dist/libs/i18n"
   }
 }

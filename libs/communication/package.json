@@ -15,10 +15,6 @@
   "main": "./index.js",
   "module": "./index.esm.js",
   "types": "./index.d.ts",
-  "publishConfig": {
-    "directory": "dist/libs/communication",
-    "access": "public"
-  },
   "exports": {
     ".": {
       "types": "./index.d.ts",
@@ -44,5 +40,8 @@
     "@novx/core": "workspace:*",
     "axios": "^1.13.5"
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
 }

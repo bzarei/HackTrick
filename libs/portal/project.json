@@ -58,8 +58,5 @@
         "command": "typedoc --tsconfig libs/portal/tsconfig.lib.json --out docs/libs/portal"
       }
     }
-  },
-  "release": {
-    "outputPath": "dist/libs/portal"
   }
 }

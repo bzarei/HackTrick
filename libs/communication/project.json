@@ -57,8 +57,5 @@
         "command": "typedoc --tsconfig libs/communication/tsconfig.lib.json --out docs/libs/communication"
       }
     }
-  },
-  "release": {
-    "outputPath": "dist/libs/communication"
   }
 }
