@@ -1,4 +1,6 @@
-# Novx Core
+# Core
+
+## Introduction
 
 The `core` library covers several aspects
 - a combined di and aop solution
@@ -80,7 +82,7 @@ which totally makes sense, since aspects typically also require injected objects
 
 Comparing it with the biggest competitors, claude created this matrix:
 
-### Dependency Injection
+**Dependency Injection**
 
 | Feature | This Framework | InversifyJS | TSyringe | TypeDI | NestJS DI | Awilix |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
@@ -108,7 +110,7 @@ Comparing it with the biggest competitors, claude created this matrix:
 
 *Uses own TypeDescriptor registry; `reflect-metadata` is used only for annotation params in AOP.
 
-### Aspect-Oriented Programming
+**Aspect-Oriented Programming**
 
 | Feature | This Framework | InversifyJS | TSyringe | TypeDI | NestJS DI | AspectJS |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
@@ -125,3 +127,7 @@ Comparing it with the biggest competitors, claude created this matrix:
 | **Aspects are DI singletons** | ✅ | ❌ | ❌ | ❌ | ✅ (providers) | ❌ |
 | **Injected aspect state** | ✅ `this.message` etc. | ❌ | ❌ | ❌ | ✅ | ❌ |
 | `Invocation` object | ✅ | ❌ | ❌ | ❌ | ✅ `ExecutionContext` | ✅ |
+
+# API
+
+- http://ernstandreas.de/novx/
