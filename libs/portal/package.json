@@ -1,6 +1,6 @@
 {
   "name": "@novx/portal",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Portal library",
   "homepage": "https://github.com/coolsamson7/novx",
   "repository": {
@@ -15,10 +15,6 @@
   "main": "./index.js",
   "module": "./index.esm.js",
   "types": "./index.d.ts",
-  "publishConfig": {
-    "directory": "dist/libs/portal",
-    "access": "public"
-  },
   "exports": {
     ".": {
       "types": "./index.d.ts",
@@ -57,5 +53,8 @@
   "peerDependencies": {
     "react": "^19.2.4",
     "react-router-dom": "^7.13.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -161,16 +161,16 @@ importers:
     dependencies:
       '@novx/communication':
         specifier: workspace:*
-        version: link:../../libs/communication/dist/libs/communication
+        version: link:../../libs/communication
       '@novx/core':
         specifier: workspace:*
-        version: link:../../libs/core/dist/libs/core
+        version: link:../../libs/core
       '@novx/i18n':
         specifier: workspace:*
-        version: link:../../libs/i18n/dist/libs/i18n
+        version: link:../../libs/i18n
       '@novx/portal':
         specifier: workspace:*
-        version: link:../../libs/portal/dist/libs/portal
+        version: link:../../libs/portal
     devDependencies:
       html-webpack-plugin:
         specifier: ^5.6.6
@@ -183,39 +183,37 @@ importers:
     dependencies:
       '@novx/communication':
         specifier: workspace:*
-        version: link:../../libs/communication/dist/libs/communication
+        version: link:../../libs/communication
       '@novx/core':
         specifier: workspace:*
-        version: link:../../libs/core/dist/libs/core
+        version: link:../../libs/core
       '@novx/i18n':
         specifier: workspace:*
-        version: link:../../libs/i18n/dist/libs/i18n
+        version: link:../../libs/i18n
       '@novx/portal':
         specifier: workspace:*
-        version: link:../../libs/portal/dist/libs/portal
+        version: link:../../libs/portal
 
   libs/communication:
     dependencies:
       '@novx/core':
         specifier: workspace:*
-        version: link:../core/dist/libs/core
+        version: link:../core
       axios:
         specifier: ^1.13.5
         version: 1.13.6
-    publishDirectory: dist/libs/communication
 
   libs/core:
     dependencies:
       source-map-js:
         specifier: ^1.2.1
         version: 1.2.1
-    publishDirectory: dist/libs/core
 
   libs/i18n:
     dependencies:
       '@novx/core':
         specifier: workspace:*
-        version: link:../core/dist/libs/core
+        version: link:../core
       '@swc/helpers':
         specifier: ~0.5.18
         version: 0.5.19
@@ -225,19 +223,18 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
-    publishDirectory: dist/libs/i18n
 
   libs/portal:
     dependencies:
       '@novx/communication':
         specifier: workspace:*
-        version: link:../communication/dist/libs/communication
+        version: link:../communication
       '@novx/core':
         specifier: workspace:*
-        version: link:../core/dist/libs/core
+        version: link:../core
       '@novx/i18n':
         specifier: workspace:*
-        version: link:../i18n/dist/libs/i18n
+        version: link:../i18n
       axios:
         specifier: ^1.13.5
         version: 1.13.6
@@ -260,7 +257,6 @@ importers:
       react-router-dom:
         specifier: ^7.13.1
         version: 7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-    publishDirectory: dist/libs/portal
 
 packages:
 
