@@ -80,6 +80,7 @@
       "icon": "home",
       "description": "home",
       "tags": [
+        "menu"
       ],
       "permissions": [],
       "features": [],

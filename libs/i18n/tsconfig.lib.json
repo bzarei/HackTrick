@@ -15,9 +15,7 @@
   "include": ["src/**/*.ts"],
   "exclude": [
     "src/**/*.spec.ts",
-    "src/**/*.test.ts",
-    "jest.config.ts",
-    "jest.config.cts"
+    "src/**/*.test.ts"
   ],
   "references": [
     { "path": "../core" },

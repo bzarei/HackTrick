@@ -13,7 +13,6 @@
     "@nrwl/eslint-plugin-nx": "^19.8.4",
     "@nx/eslint": "22.5.3",
     "@nx/eslint-plugin": "22.5.3",
-    "@nx/jest": "22.5.3",
     "@nx/js": "22.5.3",
     "@nx/rollup": "22.5.3",
     "@nx/vite": "22.5.3",
