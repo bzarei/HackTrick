@@ -1,16 +1,9 @@
-# Novx Core
+# I18N
 
-As part of the Novx Monorepo, Core provides basic infrastructural elements, which are
-- a dependency injection solution
-- an integrated aop solution
-- handling of configuration values
-- error handling
-- tracing
+## Introduction
 
-## Building
+The `i18n` library implements a titny i18n solution.
 
-Run `nx build i18n` to build the library.
+## API Docs
 
-## Running unit tests
-
-Run `nx test i18n` to execute the unit tests via [Jest](https://jestjs.io).
+- http://ernstandreas.de/novx/
