@@ -5,9 +5,10 @@
     "libs/i18n/src/index.ts",
     "libs/portal/src/index.ts"
   ],
-  "tsconfig": "tsconfig.base.json",
+  "tsconfig": "tsconfig.docs.json",
   "out": "dist/docs",
   "exclude": ["apps/**"],
+  "skipErrorChecking": true,
   "excludePrivate": true,
   "excludeProtected": true,
   "excludeInternal": true,

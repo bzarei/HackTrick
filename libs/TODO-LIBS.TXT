@@ -2,6 +2,7 @@
 
 - url geht nicht / Moudle wird nicht geladen!
 - stack fixen!!!
+- inherited environemnt FUCK!!!!! -> TyoeDesciptor is screed
 
 ### LATER
 
@@ -9,8 +10,6 @@
 
 ### NOW
 
-- stack
-- inherited environemnt FUCK!!!!! -> TyoeDesciptor is screed
 
 ### DONE
 

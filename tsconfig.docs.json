@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  },
+  "exclude": [
+    "apps/**",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "node_modules/**"
+  ]
+}
