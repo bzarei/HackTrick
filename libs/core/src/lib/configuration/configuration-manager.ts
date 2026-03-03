@@ -1,3 +1,4 @@
+import { onRunning } from "../di"
 import { ConfigurationSource } from "./configuration-source"
 
 /**
@@ -82,6 +83,8 @@ export class ConfigurationManager {
     /**
      * load all registered sources.
      */
+     
+    @onRunning()
     async load(): Promise<any> {
         for (const source of this.sources)
           await this.loadSource(source)
