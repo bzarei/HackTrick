@@ -19,8 +19,10 @@ import {
   SvgSpriteRegistry,
   OIDCUser,
   Session,
-  AuthenticationRequest
+  AuthenticationRequest,
 } from '@novx/portal';
+
+import { applicationConfig } from "./environments/environments"
 
 import { AssetTranslationLoader, LocaleManager, LocalStorageLocaleBackingStore, Translator, TranslatorBuilder } from '@novx/i18n';
 
@@ -38,6 +40,8 @@ import {
   Trace,
   TraceEntry,
   TraceFormatter,
+  injectable,
+  config, module, Module as DIModule
 } from '@novx/core';
 
 import {
@@ -117,6 +121,16 @@ new Serialization();
 
 // application module
 
+@module({name: "config"})
+class ApplicationConfigModule extends DIModule {
+  @create()
+  createConfigurationManager() : ConfigurationManager {
+      return new ConfigurationManager(
+          new ValueConfigurationSource(applicationConfig),
+      );
+  }
+}
+
 @Module({
   id: 'shell',
   label: 'Shell',
@@ -148,27 +162,14 @@ export class ApplicationModule extends AbstractModule {
   }
 
   @create()
-  createConfigurationManager() : ConfigurationManager {
-    return new ConfigurationManager(
-      new ValueConfigurationSource({
-        foo: {
-          bar: 'bar',
-        },
-      }),
-    );
-  }
-
-  @create()
-  createDeploymentLoader(portalService: PortalService) : DeploymentLoader {
-    let load = 'remote';
-
-    if (load == 'service')
+  createDeploymentLoader(portalService: PortalService, @config("deployment", "local") deployment : string) : DeploymentLoader {
+    console.log(deployment)
+     console.log(applicationConfig)
+    if (deployment == 'service')
       return new ServiceDeploymentLoader(portalService);
 
-    else if (load == 'remote')
-      return new RemoteDeploymentLoader([
-        { name: 'microfrontend', url: 'http://localhost:3001' },
-      ]);
+    else if (deployment == 'microfrontend')
+      return new RemoteDeploymentLoader(applicationConfig.deployments[deployment].remotes);
 
       else return new EmptyDeploymentLoader()
   }
@@ -252,7 +253,10 @@ const loaders = [RemoteComponentLoader, LocalComponentLoader, I18NLoader]
 // create environment
 
 export const createEnvironment = async () : Promise<Environment> => {
-    const environment = new Environment({module: ApplicationModule})
+    const configEnvironment = new Environment({module: ApplicationConfigModule})
+    await configEnvironment.start();
+
+    const environment = new Environment({module: ApplicationModule, parent: configEnvironment})
 
     console.log(environment.report())
 
