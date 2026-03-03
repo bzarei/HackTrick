@@ -2,9 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./out-tsc/jest",
-    "types": ["node", "vitest"]
+    "types": ["node", "vitest/globals"]
   },
-  "types": ["node", "vitest"],
+  "types": ["node", "vitest/globals"],
   "include": [
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
