@@ -18,8 +18,7 @@
   "plugins": [
     { "plugin": "@nx/js" },
     { "plugin": "@nx/rollup" },
-    { "plugin": "@nx/eslint" },
-    { "plugin": "@nx/jest" }
+    { "plugin": "@nx/eslint" }
   ],
   "release": {
     "projects": ["libs/*"],
