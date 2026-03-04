@@ -18,12 +18,28 @@ class Bar {}
 
 @injectable()
 class Foo {
-  constructor(private bar: Bar) {}
+  constructor(private bar: Bar, @config("foo.bar") public value: string)) {} // will inject a configuration value
+}
+
+@injectable({scope: "request", eager: false}) // default is "singleton" and eager
+class Baz {
+  constructor() {}
 }
 
 @module()
 class TestModule extends Module {
   @create()
+  createConfigurationManager() : ConfigurationManager {
+    return new ConfigurationManager(
+      new ValueConfigurationSource({
+        foo: {
+          bar: 'bar',
+        },
+      }),
+    );
+  }
+
+  @create() // same arguments possble as @create
   createBar() : Bar {
      return new Bar()
   }
@@ -32,23 +48,49 @@ class TestModule extends Module {
   async start() : Promise<void> {
     console.log("run, forrest...")
   }
+
+  @onDestroy()
+  async stop() : Promise<void> {
+    console.log("rip...")
+  }
 }
+
+@module({name: "import"})
+class ImportModule extends Module {}
+
+@injectable({scope: "import"})
+class Import {}
+
+@module({name: "child", imports: [ImportModule]}) // load transitived closure...
+class ChildModule extends Module {}
+
+@injectable({scope: "child"})
+class Child {}
 
 // start container
 
 const environment = new Environment({module: TestModule});
 await environment.start();
 
+// child container will inherit all parent providers and the additional providers from Child- and ImportModule
+
+const childEnvironment = new Environment({module: ChildModule, parent: environment});
+await childEnvironment.start();
+
+// get some instances
+
 const foo = environment.get(Foo)
+
+const child = childEnvironment.get(Import)
 ```
 
-Ok, kind of looks familiar, but of course there is much more:
+Ok, many thngs looks familiar, here are the overall capabilities:
 - different - pluggable - scopes
-- factory functions
+- factory functions (`@create`)
 - post processors
-- lifecycle methods
-- pluggable parameter decorators used for injections
-- hierarchical environments
+- lifecycle methods (`@onInject`, `@onInit`, `@onRunning`, `@onDestroy`)
+- pluggable parameter decorators used for injections ( as an example  `@value`)
+- hierarchical environments, no static state anywhere
 
 And the biggest advantage in contrast to all other solutions, it has an integrated aop mechanism.
 
@@ -127,6 +169,10 @@ Comparing it with the biggest competitors, claude created this matrix:
 | **Aspects are DI singletons** | ✅ | ❌ | ❌ | ❌ | ✅ (providers) | ❌ |
 | **Injected aspect state** | ✅ `this.message` etc. | ❌ | ❌ | ❌ | ✅ | ❌ |
 | `Invocation` object | ✅ | ❌ | ❌ | ❌ | ✅ `ExecutionContext` | ✅ |
+
+# Documentation
+
+Detailed documentation can be found in the corresponding [wiki](https://github.com/coolsamson7/novx/wiki/Core).
 
 # API
 

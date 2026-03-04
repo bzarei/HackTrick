@@ -216,6 +216,13 @@ This is good enough for a local environment used for development purposes, in pr
 server component that is aware of different microfrontends and configurations also including more sophisticated logic to filter
 features according to feature flags, etc.
 
+## Showcase
+
+A showcase app shows a shell and a microfreontend.
+
+<img width="2634" height="1852" alt="image" src="https://github.com/user-attachments/assets/b5886a58-2e9a-4196-b0ae-d60f62587fcc" />
+
+
 ## API Docs
 
 - http://ernstandreas.de/novx/

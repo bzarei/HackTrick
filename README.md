@@ -13,6 +13,10 @@ NOVX is a monorepo covering a number of Typescript and React solutions in indivi
 - [communication](https://github.com/coolsamson7/novx/tree/main/libs/communication) base classes for REST calls based on Axios
 - [portal](https://github.com/coolsamson7/novx/tree/main/libs/portal) a react microfrontend framework 
 
+## Wiki
+
+Check the corresponding [Wiki](https://github.com/coolsamson7/novx/wiki) for more detailed information.
+
 ## API Docs
 
-- http://ernstandreas.de/novx/
+The overall API docs can be found [here](http://ernstandreas.de/novx/)
