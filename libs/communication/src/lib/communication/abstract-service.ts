@@ -1,5 +1,5 @@
 import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from "axios";
-import {injectable, Providers, Constructor} from "@novx/core";
+import {injectable, Providers, Constructor, TypeDescriptor} from "@novx/core";
 
 import {Serialization} from "./serialization";
 
@@ -9,7 +9,7 @@ export class EndpointLocator {
    * @param domain a domain name )
    */
   getEndpoint(domain: string): string {
-    return "http://localhost:8000/";// TODO throw new Error("implement getEndpoint");
+    throw new Error("implement getEndpoint");
   }
 }
 
@@ -55,10 +55,11 @@ export interface AxiosDecorator {
   decorate(domain: string, instance: AxiosInstance): void;
 }
 
+@injectable() // TODO move
 class DefaultAxiosBuilder extends AxiosBuilder {
   create(domain: string, url: string): AxiosInstance {
     return axios.create({
-      baseURL: url, // TODO more
+      baseURL: url,
     });
   }
 }
@@ -71,13 +72,11 @@ export class HTTPFactory {
   // instance data
 
   private instances: { [url: string]: AxiosInstance } = {};
-  private builder: AxiosBuilder = new DefaultAxiosBuilder();
-
   private decorator: AxiosDecorator | undefined;
 
   // constructor
 
-  constructor(private endpointLocator: EndpointLocator) {}
+  constructor(private endpointLocator: EndpointLocator, private builder: AxiosBuilder) {}
 
   // public
 
@@ -111,7 +110,7 @@ export class HTTPFactory {
  */
 export function service(domain: string): any {
     return function (clazz: Constructor<AbstractService>) {
-        //TypeDescriptor.forType(clazz).addTypeDecorator(RegisterService)
+        TypeDescriptor.forType(clazz).addDecorator(service)
 
         Providers.registerClass("", clazz);
 
@@ -187,11 +186,11 @@ export abstract class AbstractService {
   }
 
   serialize<T>(type: string, format: string, value: T): any {
-      return Serialization.This.serialization(type).serialize(format, value)
+      return Serialization.serialization(type).serialize(format, value)
   }
 
   deserialize<T>(type: string, format: string, value: any): T {
-        return Serialization.This.serialization(type).deserialize(format, value) as T
+        return Serialization.serialization(type).deserialize(format, value) as T
   }
 
 
