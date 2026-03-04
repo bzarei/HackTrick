@@ -56,8 +56,9 @@ function formatTime(date: Date): string {
 }
 
 function formatPath(path: string): string {
-  const parts = path.split(/[./]/);
-  return parts[parts.length - 1] || path;
+    return path
+  //const parts = path.split(/[./]/);
+  //return parts[parts.length - 1] || path;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -203,21 +204,26 @@ export default function TraceFooter({
           <span style={{ color: "#30363d", fontSize: 10 }}>|</span>
 
           {/* Path filter */}
-          <input
+          <select
             value={filterPath}
             onChange={(e) => setFilterPath(e.target.value)}
-            placeholder="filter path…"
             style={{
               background: "#0d1117",
               border: "1px solid #30363d",
               borderRadius: 3,
-              color: "#c9d1d9",
+              color: filterPath ? "#c9d1d9" : "#484f58",
               fontSize: 11,
               padding: "2px 8px",
               outline: "none",
-              width: 140,
+              width: 180,
+              cursor: "pointer",
             }}
-          />
+          >
+            <option value="">all paths…</option>
+            {[...new Set(entries.map((e) => e.path))].sort().map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
 
           <span style={{ color: "#8b949e", fontSize: 10, marginLeft: "auto" }}>
             {visible.length}/{entries.length}
@@ -291,7 +297,7 @@ export default function TraceFooter({
                     onClick={() => setSelectedEntry(isSelected ? null : entry)}
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "88px 44px 160px 1fr",
+                     gridTemplateColumns: "88px 44px minmax(160px, 220px) 1fr",
                       gap: "0 12px",
                       alignItems: "center",
                       padding: "3px 12px",

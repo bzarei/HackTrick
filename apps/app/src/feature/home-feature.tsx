@@ -1,9 +1,239 @@
 import React from "react";
 
-import {  EnvironmentContext, Feature, FeatureMetadata, FeatureRegistry } from '@novx/portal';
+import {  action, command, computed, Controller, EnvironmentContext, Feature, FeatureMetadata, observable, reactive, useLocalEnvironment, useObserver } from '@novx/portal';
 
 import { useState, useMemo } from "react";
-import { Environment } from "@novx/core";
+import { Environment, injectable } from "@novx/core";
+
+// TEST
+
+@injectable({scope: "environment"})
+@reactive
+class Counter extends Controller {
+
+  @observable count = 0
+
+  @computed
+  get double() { return this.count * 2 }
+
+  @command
+  async increment() {
+    await new Promise(r => setTimeout(r, 1200))
+    this.count++
+  }
+
+  @command
+  async decrement() {
+    await new Promise(r => setTimeout(r, 1200))
+    this.count--
+  }
+
+  @command
+  reset() { this.count = 0 }
+}
+
+// ─── View ─────────────────────────────────────────────────────────────────────
+
+export const CounterView = () => {
+  useObserver()
+  const counter = useLocalEnvironment().get(Counter)
+  const busy = !counter.isEnabled("increment")
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&display=swap');
+
+        .cv-root {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #0a0a0a;
+          font-family: 'Syne', sans-serif;
+        }
+
+        .cv-card {
+          position: relative;
+          width: 340px;
+          background: #111;
+          border: 1px solid #222;
+          border-radius: 2px;
+          padding: 40px 36px 36px;
+          overflow: hidden;
+        }
+
+        .cv-card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 2px;
+          background: linear-gradient(90deg, #ff3c00, #ff9500, #ff3c00);
+          background-size: 200% 100%;
+          animation: cv-shimmer 2s linear infinite;
+        }
+
+        @keyframes cv-shimmer {
+          0%   { background-position: 200% 0 }
+          100% { background-position: -200% 0 }
+        }
+
+        .cv-label {
+          font-size: 10px;
+          letter-spacing: 3px;
+          text-transform: uppercase;
+          color: #444;
+          margin-bottom: 32px;
+        }
+
+        .cv-count {
+          font-size: 88px;
+          font-weight: 800;
+          line-height: 1;
+          color: #f5f5f5;
+          font-variant-numeric: tabular-nums;
+          transition: color 0.3s;
+          margin-bottom: 6px;
+        }
+
+        .cv-count.busy { color: #2a2a2a; }
+
+        .cv-double {
+          font-family: 'Syne Mono', monospace;
+          font-size: 13px;
+          color: #ff3c00;
+          margin-bottom: 28px;
+          letter-spacing: 0.5px;
+        }
+
+        .cv-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 10px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          padding: 4px 10px 4px 8px;
+          border-radius: 2px;
+          border: 1px solid;
+          font-family: 'Syne Mono', monospace;
+          transition: all 0.3s;
+          margin-bottom: 32px;
+        }
+
+        .cv-chip.ready  { color: #4ade80; border-color: #4ade8040; background: #4ade8008; }
+        .cv-chip.busy   { color: #ff9500; border-color: #ff950040; background: #ff950008; }
+
+        .cv-dot {
+          width: 5px; height: 5px;
+          border-radius: 50%;
+          background: currentColor;
+        }
+
+        .cv-dot.busy { animation: cv-pulse 0.8s ease-in-out infinite alternate; }
+
+        @keyframes cv-pulse {
+          from { opacity: 1;   transform: scale(1);   }
+          to   { opacity: 0.3; transform: scale(0.7); }
+        }
+
+        .cv-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr 40px;
+          gap: 8px;
+        }
+
+        .cv-btn {
+          height: 44px;
+          border: 1px solid #2a2a2a;
+          border-radius: 2px;
+          background: transparent;
+          font-family: 'Syne', sans-serif;
+          font-size: 20px;
+          cursor: pointer;
+          transition: all 0.15s;
+          color: #f5f5f5;
+          background: #181818;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .cv-btn.small {
+          font-size: 14px;
+          letter-spacing: 1px;
+          color: #666;
+        }
+
+        .cv-btn:not(:disabled):hover        { border-color: #ff3c00; color: #ff3c00; background: #ff3c0008; }
+        .cv-btn:not(:disabled):active       { transform: scale(0.97); }
+        .cv-btn:disabled                    { opacity: 0.2; cursor: not-allowed; }
+
+        .cv-progress {
+          position: absolute;
+          bottom: 0; left: 0;
+          height: 2px;
+          background: #ff9500;
+          animation: cv-progress 1.2s linear forwards;
+        }
+
+        @keyframes cv-progress {
+          from { width: 0% }
+          to   { width: 100% }
+        }
+      `}</style>
+
+      <div className="cv-root">
+        <div className="cv-card">
+
+          <div className="cv-label">counter.tsx</div>
+
+          <div className={`cv-count ${busy ? "busy" : ""}`}>
+            {counter.count}
+          </div>
+
+          <div className="cv-double">×2 = {counter.double}</div>
+
+          <div className={`cv-chip ${busy ? "busy" : "ready"}`}>
+            <span className={`cv-dot ${busy ? "busy" : ""}`} />
+            {busy ? "executing…" : "ready"}
+          </div>
+
+          <div className="cv-actions">
+            <button
+              className="cv-btn"
+              disabled={busy}
+              onClick={() => counter.decrement()}
+            >
+              −
+              {busy && <span className="cv-progress" />}
+            </button>
+
+            <button
+              className="cv-btn"
+              disabled={busy}
+              onClick={counter.increment}
+            >
+              +
+              {busy && <span className="cv-progress" />}
+            </button>
+
+            <button
+              className="cv-btn small"
+              disabled={busy}
+              onClick={() => counter.execute("reset")}
+              title="reset"
+            >
+              ↺
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </>
+  )
+}
+
+// TEST
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Utilities
@@ -208,6 +438,7 @@ export class HomePage extends React.Component {
   declare context: Environment;
 
   render() {
-     return  <FeatureRegistryVisualizer features={this.context.get(FeatureRegistry).filter((f) => f.parent == undefined)}></FeatureRegistryVisualizer>
+      return <CounterView/>
+     //return  <FeatureRegistryVisualizer features={this.context.get(FeatureRegistry).filter((f) => f.parent == undefined)}></FeatureRegistryVisualizer>
   }
 }

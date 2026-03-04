@@ -46,8 +46,7 @@ import {
 
 import {
   EndpointLocator,
-  PatternEndpointLocator,
-  Serialization,
+  PatternEndpointLocator
 } from '@novx/communication';
 
 import manifest from './manifest.json';
@@ -67,7 +66,9 @@ export class FooterTrace extends Trace {
    * @inheritDoc
    */
   trace(entry: TraceEntry): void {
-    FooterTrace.entries.push(entry)
+       FooterTrace.entries.push(entry)
+
+   // FooterTrace.entries = [...FooterTrace.entries, entry]
   }
 }
 
@@ -114,10 +115,6 @@ new Tracer({
     portal: TraceLevel.FULL,
   },
 });
-
-// serialization
-
-new Serialization();
 
 // application module
 
