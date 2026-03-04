@@ -74,6 +74,9 @@ which can either be used locally or registered via a server component.
 Let's see how to boot an application. First thing we need to do is to setup the di container and add a couple of instances
 inside of the main "module"
 ```ts
+
+import manifest from './manifest.json';
+
 @Module({
   id: 'shell',
   label: 'Shell',
@@ -88,16 +91,11 @@ export class ApplicationModule extends AbstractModule {
   }
 
   @create()
-  createDeploymentLoader(portalService: PortalService) : DeploymentLoader {
-    return new EmptyDeploymentLoader() // only local, so far 
-  }
-
-  @create()
-  createDeploymentManager(loader: DeploymentLoader, featureRegistry: FeatureRegistry) : DeploymentManager {
+  createDeploymentManager(featureRegistry: FeatureRegistry) : DeploymentManager {
       return new DeploymentManager(
-        featureRegistry,
-        loader,
-        manifest as Manifest // that's the local genaretd manifest.json
+        featureRegistry: featureRegistry,
+        loader: new EmptyDeploymentLoader(), // only local, so far 
+        localManifest: manifest as Manifest // that's the local generated manifest.json
       );
   }
 
@@ -116,8 +114,10 @@ export class ApplicationModule extends AbstractModule {
 
       routerManager.setRoot(featureRegistry.finder()
         .withTag('portal')
-        .withVisibility(sessionManager.hasSession())
+        .matchingSession(sessionManager.hasSession()) // we typically define two separate root pages, a public and a private!
         .findOne());
+
+      // restore existing session
         
       await sessionManager.init();
     }
@@ -191,7 +191,7 @@ const features = featureRegistry
     .finder()
     .withPath()
     .withoutParent()
-    .withVisibility(sessionManager.hasSession())
+    .matchingSession(sessionManager.hasSession())
     .withTag('menu')
     .find();
 ```
@@ -225,4 +225,4 @@ A showcase app shows a shell and a microfreontend.
 
 ## API Docs
 
-- http://ernstandreas.de/novx/
+The complete APIs can be found [here](http://ernstandreas.de/novx/)
