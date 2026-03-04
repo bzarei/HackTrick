@@ -174,7 +174,11 @@ export class RouterManager {
 
     const hasSession = this.sessionManager.hasSession()
 
-    const features = this.featureRegistry.filter((f) => true);
+    const features = this.featureRegistry.filter((feature) =>(
+                feature !== root &&
+                feature.path !== undefined &&
+                feature.parent == undefined &&
+                !(feature.tags || []).includes("portal")));
 
     const build = (feature: FeatureMetadata): RouteObjectWithFeature => {
       const isPrivate = feature.visibility && feature.visibility.includes('private') && !feature.visibility.includes('public');
@@ -204,15 +208,7 @@ export class RouterManager {
         element: <FeatureOutlet key={root.id} featureId={root.id} />,
         $feature: root,
         children: [
-          ...features
-            .filter(
-              (feature) =>
-                feature !== root &&
-                feature.path &&
-                !feature.parent &&
-                !(feature.tags || []).includes("portal"),
-            )
-            .map(build),
+          ...features.map(build),
           // Catch-all error route for undefined paths
           {
             path: '*',
