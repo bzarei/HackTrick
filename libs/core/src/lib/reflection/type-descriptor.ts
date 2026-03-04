@@ -191,12 +191,16 @@ export class TypeDescriptor<T> {
         return this.properties['constructor'] as MethodDescriptor
     }
 
-    public getMethods(): MethodDescriptor[] {
-        return Object.values(this.properties).filter(p => p.type === PropertyType.METHOD) as MethodDescriptor[]
+    public getMethods(filter : (method: MethodDescriptor) => boolean = (method) => true): MethodDescriptor[] {
+        return Object.values(this.properties)
+            .filter((p): p is MethodDescriptor => p.type === PropertyType.METHOD)
+            .filter(filter)
     }
 
-    public getFields(): FieldDescriptor[] {
-        return Object.values(this.properties).filter(p => p.type === PropertyType.FIELD) as FieldDescriptor[]
+    public getFields(filter : (field: FieldDescriptor) => boolean = (field) => true): FieldDescriptor[] {
+        return Object.values(this.properties)
+         .filter((p): p is FieldDescriptor => p.type === PropertyType.FIELD)
+         .filter(filter)
     }
 
     public getProperties(): FieldDescriptor[] {
