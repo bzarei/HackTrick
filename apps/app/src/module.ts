@@ -20,6 +20,8 @@ import {
   OIDCUser,
   Session,
   AuthenticationRequest,
+  Controller,
+  command,
 } from '@novx/portal';
 
 import { applicationConfig } from "./environments/environments"
@@ -41,7 +43,10 @@ import {
   TraceEntry,
   TraceFormatter,
   injectable,
-  config, module, Module as DIModule
+  config, module, Module as DIModule,
+  around,
+  Invocation,
+  methods
 } from '@novx/core';
 
 import {
@@ -50,6 +55,8 @@ import {
 } from '@novx/communication';
 
 import manifest from './manifest.json';
+
+// funny trace
 
 export class FooterTrace extends Trace {
   static entries : TraceEntry[] = []
@@ -100,7 +107,7 @@ export class NoAuthenticationService implements Authentication<OIDCUser, any> {
    }
     
    async logout(): Promise<void> {
-    // noope
+    // noop
    }
 }
 
@@ -120,12 +127,51 @@ new Tracer({
 
 @module({name: "config"})
 class ApplicationConfigModule extends DIModule {
+  // some factories
+
   @create()
   createConfigurationManager() : ConfigurationManager {
       return new ConfigurationManager(
           new ValueConfigurationSource(applicationConfig),
       );
   }
+
+  // aspects for commands
+
+ @around(methods().decoratedWith(command as any).thatAreSync())
+   around(invocation: Invocation): any {
+     const ctrl = invocation.target as Controller
+     const name = invocation.method().name
+
+     const start = performance.now()
+
+     try {
+       return invocation.proceed()
+     }
+     finally {
+       const duration = performance.now() - start
+       console.log(`< ${name} finished in ${duration.toFixed(2)} ms`)
+       ctrl.enable(name)
+     }
+   }
+
+   @around(methods().decoratedWith(command as any).thatAreAsync())
+   async aroundAsync(invocation: Invocation): Promise<any> {
+     const ctrl = invocation.target as Controller
+     const name = invocation.method().name
+
+     ctrl.disable(name)
+     const start = performance.now()
+
+     try {
+       return await invocation.proceed()
+     }
+     finally {
+       const duration = performance.now() - start
+       console.log(`< ${name} finished in ${duration.toFixed(2)} ms`)
+       ctrl.enable(name)
+     }
+   }
 }
 
 @Module({
@@ -160,15 +206,13 @@ export class ApplicationModule extends AbstractModule {
 
   @create()
   createDeploymentLoader(portalService: PortalService, @config("deployment", "local") deployment : string) : DeploymentLoader {
-    console.log(deployment)
-     console.log(applicationConfig)
     if (deployment == 'service')
       return new ServiceDeploymentLoader(portalService);
 
     else if (deployment == 'microfrontend')
       return new RemoteDeploymentLoader(applicationConfig.deployments[deployment].remotes);
 
-      else return new EmptyDeploymentLoader()
+    else return new EmptyDeploymentLoader()
   }
 
   @create()
@@ -189,10 +233,10 @@ export class ApplicationModule extends AbstractModule {
         })
   }
 
-    // lifecycle
+  // lifecycle
 
-    @onRunning()
-    async onRunning(featureRegistry: FeatureRegistry, deploymentManager: DeploymentManager, sessionManager: SessionManager<any,any>, routerManager: RouterManager) {
+  @onRunning()
+  async onRunning(featureRegistry: FeatureRegistry, deploymentManager: DeploymentManager, sessionManager: SessionManager<any,any>, routerManager: RouterManager) {
       // load deployment
 
       await deploymentManager.loadDeployment({
@@ -207,7 +251,7 @@ export class ApplicationModule extends AbstractModule {
         .withVisibility(sessionManager.hasSession())
         .findOne()
         ))
-    }
+  }
 
   // error handlers
 
@@ -250,14 +294,23 @@ const loaders = [RemoteComponentLoader, LocalComponentLoader, I18NLoader]
 // create environment
 
 export const createEnvironment = async () : Promise<Environment> => {
+    // environment just for configuration values
+
     const configEnvironment = new Environment({module: ApplicationConfigModule})
     await configEnvironment.start();
 
-    const environment = new Environment({module: ApplicationModule, parent: configEnvironment})
+    // the real environment
+
+    const environment = new Environment({
+        module: ApplicationModule,
+        parent: configEnvironment
+    })
 
     console.log(environment.report())
 
     await environment.start()
+
+    // done
 
     return environment
 }
