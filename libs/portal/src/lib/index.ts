@@ -18,6 +18,8 @@ export * from './outlet-loader';
 export * from './component';
 export * from './ui';
 export * from './reactive';
+export * from './command';
+
 
 
 
