@@ -1,6 +1,8 @@
 import { Environment } from '@novx/core'
 import React, { createContext, useContext } from 'react'
 
+type Constructor<T> = new (...args: any[]) => T
+
 export const EnvironmentContext = createContext<Environment | null>(null)
 
 export function useEnvironment(): Environment {
@@ -12,7 +14,21 @@ export function useEnvironment(): Environment {
   return environment
 }
 
-type Constructor<T> = new (...args: any[]) => T
+export function useLocalEnvironment(module?: any) {
+  const parent = useEnvironment()
+
+  const env = React.useMemo(
+    () => new Environment({ module, parent }),
+    [parent, module]
+  )
+
+  React.useEffect(() => {
+    void env.start()
+    return () => { void env.stop() }
+  }, [env])
+
+  return env
+}
 
 export function useInject<T extends readonly Constructor<any>[]>(
   ...types: T
