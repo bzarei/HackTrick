@@ -175,7 +175,11 @@ export class Stacktrace {
         }
 
         // external source map
-        const external = /\/\/# sourceMappingURL=(.*)/.exec(script);
+        //const external = /\/\/# sourceMappingURL=(.*)/.exec(script);
+
+        const allMatches = [...script.matchAll(/\/\/# sourceMappingURL=(.*)/g)];
+        const external = allMatches.length > 0 ? allMatches[allMatches.length - 1] : null;
+
         if (!external) return of({});
         const mapUri = new URL(external[1], uri).href + uriQuery;
         return fetchObs(mapUri).pipe(
