@@ -5,6 +5,20 @@ import { TraceEntry } from "./trace-entry"
 import { ConsoleTrace } from "./trace/console-trace"
 import { StackFrame, Stacktrace } from "../util"
 
+const IGNORED_FRAME_PATTERNS = [
+  /reflect.?metadata/i,
+  /Reflect\./,
+  /__decorate/,
+  /node_modules/,
+];
+
+function findCallerFrame(frames: StackFrame[]): StackFrame | null {
+  // Skip frame[0] (Tracer.Trace itself), then find first non-noise frame
+  return frames.slice(1).find(f => 
+    f.file && !IGNORED_FRAME_PATTERNS.some(p => p.test(f.file!))
+  ) ?? null;
+}
+
 /**
  * A Tracer is used to emit trace messages for development purposes.
  * While it shares the logic of a typical logger, it will be turned of in production.
@@ -37,7 +51,7 @@ export class Tracer {
 
             const frames = Stacktrace.createFrames(stack)
 
-            const lastFrame = frames[1]
+            const lastFrame =  findCallerFrame(frames)! // frames[1]
 
             await instance.trace(path, level, message, lastFrame, ...args).catch(console.error)
         }
@@ -80,7 +94,7 @@ export class Tracer {
         if (Tracer.ENABLED && this.getTraceLevel(path) >= level) {
              // new
 
-            //await Stacktrace.mapFrames(frame)
+            await Stacktrace.mapFrames(frame)
 
             // format
 
