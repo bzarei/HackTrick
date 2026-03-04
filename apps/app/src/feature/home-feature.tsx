@@ -4,6 +4,7 @@ import {  action, command, computed, Controller, EnvironmentContext, Feature, Fe
 
 import { useState, useMemo } from "react";
 import { Environment, injectable } from "@novx/core";
+import { DemoView } from "./demo";
 
 // TEST
 
@@ -16,19 +17,19 @@ class Counter extends Controller {
   @computed
   get double() { return this.count * 2 }
 
-  @command
+  @command()
   async increment() {
     await new Promise(r => setTimeout(r, 1200))
     this.count++
   }
 
-  @command
+  @command()
   async decrement() {
     await new Promise(r => setTimeout(r, 1200))
     this.count--
   }
 
-  @command
+  @command()
   reset() { this.count = 0 }
 }
 
@@ -438,7 +439,8 @@ export class HomePage extends React.Component {
   declare context: Environment;
 
   render() {
-      return <CounterView/>
+      //return <CounterView/>
+      return <DemoView/>
      //return  <FeatureRegistryVisualizer features={this.context.get(FeatureRegistry).filter((f) => f.parent == undefined)}></FeatureRegistryVisualizer>
   }
 }
