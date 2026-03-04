@@ -23,6 +23,7 @@
     "@swc/core": "~1.15.5",
     "@swc/helpers": "~0.5.18",
     "@swc/jest": "~0.2.38",
+    "@types/matter-js": "^0.20.2",
     "@types/node": "^20.19.9",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -53,8 +54,11 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/hands": "^0.4.1675469240",
     "@types/keycloak-js": "^2.5.4",
     "keycloak-js": "^26.2.3",
+    "matter-js": "^0.20.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.1",
