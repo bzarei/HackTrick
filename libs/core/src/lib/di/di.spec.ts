@@ -69,28 +69,26 @@ class ImportedModule extends Module {
 
 class Base {
     @inject()
-    injectEnvironment(environment: Environment){
-        console.log("kk", environment);
+    injectEnvironment(environment: Environment) {
+        // console.log("kk", environment);
     }
 
     @onRunning()
     running() {
-        console.log("runn");
+        // console.log("runn");
     }
-
 }
 
 @injectable()
 class Bar extends Base {
   running() {
-    console.log("runn");
     super.running()
   }
 
   @onRunning()
   running1() {
-        console.log("runn");
-    }
+      //console.log("runn");
+  }
 }
 
 //@injectable()
@@ -156,7 +154,7 @@ class TestModule extends Module {
         return new Baz();
     }
 
-    // lifecyles
+    // lifecycles
 
     @inject()
     injectEnvironment(environment: Environment, state: ModuleState) {
