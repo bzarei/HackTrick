@@ -1445,6 +1445,12 @@ interface EnvironmentOptions {
    parent?: Environment
 }
 
+export enum EnvironmentState {
+  created,
+  running,
+  destroyed
+}
+
 /**
  * Environment is th emain DI container.
  */
@@ -1456,6 +1462,7 @@ export class Environment {
   // instance data
 
   private type: any;
+  private state = EnvironmentState.created
   private providers: Map<any, AbstractInstanceProvider<any>> = new Map();
   private lifecycleProcessors: LifecycleProcessor[] = [];
   private instances: any[] = [];
@@ -1702,13 +1709,20 @@ export class Environment {
    * Start the environment by executing ON_RUNNING lifecycle phase
    */
   async start(): Promise<void> {
-    if (Tracer.ENABLED)
-       Tracer.Trace('di', TraceLevel.HIGH, 'start environment {0}', this.type?.name || 'unknown');
+    if (this.state == EnvironmentState.created) {
+      if (Tracer.ENABLED)
+        Tracer.Trace('di', TraceLevel.HIGH, 'start environment {0}', this.type?.name || 'unknown');
 
-    // execute ON_RUNNING phase for all instances (can be async)
+      // execute ON_RUNNING phase for all instances (can be async)
 
-    for (const instance of this.instances) {
-      await this.executeProcessorsAsync(Lifecycle.ON_RUNNING, instance);
+      if (this.parent)
+        await this.parent.start()
+
+      for (const instance of this.instances) {
+        await this.executeProcessorsAsync(Lifecycle.ON_RUNNING, instance);
+      }
+
+      this.state = EnvironmentState.running
     }
   }
 
@@ -1716,16 +1730,19 @@ export class Environment {
    * Stop the environment by executing ON_DESTROY lifecycle phase
    */
   async stop(): Promise<void> {
-    if (Tracer.ENABLED)
-        Tracer.Trace('di', TraceLevel.HIGH, 'stop environment {0}', this.type?.name || 'unknown');
+    if (this.state == EnvironmentState.running) {
+      if (Tracer.ENABLED)
+          Tracer.Trace('di', TraceLevel.HIGH, 'stop environment {0}', this.type?.name || 'unknown');
 
-    // Execute ON_DESTROY phase for all instances (in reverse order)
+      // Execute ON_DESTROY phase for all instances (in reverse order)
 
-    for (let i = this.instances.length - 1; i >= 0; i--) {
-      await this.executeProcessorsAsync(Lifecycle.ON_DESTROY, this.instances[i]);
+      for (let i = this.instances.length - 1; i >= 0; i--) {
+        await this.executeProcessorsAsync(Lifecycle.ON_DESTROY, this.instances[i]);
+      }
+
+      this.instances = [];
+      this.state = EnvironmentState.destroyed;
     }
-
-    this.instances = [];
   }
 
   supports(type: new(...args: any[]) => any) : boolean {

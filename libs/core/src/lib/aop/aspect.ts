@@ -5,9 +5,6 @@ import { AspectType } from "./aspect-type.enum"
 import { AspectConfig } from "./aspect-config"
 import { AspectManager } from "./aspect-manager"
 
-//import { AdviceAspect } from "./aspect/"
-
-
 export type AspectFunc = Function
 
 export abstract class Aspect {
@@ -201,3 +198,5 @@ export function aspect(config: AspectConfig): any {
         else AspectManager.registerAspect(new BeforeAfterAspect(target.constructor, descriptor.value, config))
     }
 }
+
+import "./advice-processor"

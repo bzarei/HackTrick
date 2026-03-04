@@ -1,10 +1,8 @@
 import { MethodDescriptor, TypeDescriptor } from "../reflection"
+import { GType  } from "../lang";
 
-export declare interface Type<T> extends Function {
-  new (...args: any[]): T;
-}
 
-const subclassOf = (clazz: Type<any>, of: Type<any>): boolean => {
+const subclassOf = (clazz: GType<any>, of: GType<any>): boolean => {
     while (clazz) {
         if (clazz === of) return true
 
@@ -39,7 +37,7 @@ export class AspectTarget {
         return this
     }
 
-    returning(type: Type<any>): AspectTarget {
+    returning(type: GType<any>): AspectTarget {
         return this
     }
 
@@ -67,7 +65,7 @@ export class AspectTarget {
         return this
     }
 
-    of(type: Type<any>): AspectTarget {
+    of(type: GType<any>): AspectTarget {
         this.type = type
 
         return this
