@@ -1,0 +1,741 @@
+import { useEffect, useRef, useState } from "react";
+import { Hands, Results } from "@mediapipe/hands";
+import { Camera } from "@mediapipe/camera_utils";
+import Matter, { Engine, World, Bodies, Body } from "matter-js";
+
+// ─── Types ─────────────────────────────────────────────────────────────────────
+
+type BallKind  = "soccer" | "golden" | "bomb";
+type GamePhase = "idle" | "playing" | "gameover";
+
+interface ExtBall  { body: Matter.Body; kind: BallKind; hitCooldown: number; }
+interface Particle { x:number; y:number; vx:number; vy:number; life:number; color:string; size:number; }
+interface FloatText{ x:number; y:number; text:string; life:number; color:string; }
+interface FlyAnim  { sx:number; sy:number; tx:number; ty:number; kind:BallKind; progress:number; }
+interface ExplosionRing { x:number; y:number; r:number; maxR:number; life:number; color:string; }
+interface LM       { x:number; y:number; z:number; }
+
+// ─── Constants ─────────────────────────────────────────────────────────────────
+
+const BALL_R    = 24;
+const MINI_R    = 11;
+const PANEL_W   = 100;  // both left and right panels
+const GAME_SECS = 60;
+const VIDEO_W   = 640;
+const VIDEO_H   = 480;
+const VIDEO_ASPECT = VIDEO_W / VIDEO_H; // 4/3
+
+const KIND_POOL: BallKind[] = [
+  "soccer","soccer","soccer","soccer","soccer","golden","bomb",
+];
+const randomKind = (): BallKind =>
+  KIND_POOL[Math.floor(Math.random() * KIND_POOL.length)];
+const scoreFor = (k: BallKind) => k === "golden" ? 5 : k === "bomb" ? -3 : 1;
+
+const HAND_BONES: [number,number][] = [
+  [0,1],[1,5],[5,9],[9,13],[13,17],[0,17],
+  [1,2],[2,3],[3,4],
+  [5,6],[6,7],[7,8],
+  [9,10],[10,11],[11,12],
+  [13,14],[14,15],[15,16],
+  [17,18],[18,19],[19,20],
+];
+
+// ─── Geometry ──────────────────────────────────────────────────────────────────
+
+function ptSegDist(px:number,py:number,ax:number,ay:number,bx:number,by:number){
+  const dx=bx-ax, dy=by-ay;
+  if(!dx&&!dy) return Math.hypot(px-ax,py-ay);
+  const t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy)));
+  return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));
+}
+
+// ─── Ball renderers ────────────────────────────────────────────────────────────
+
+function pentagon(ctx:CanvasRenderingContext2D,cx:number,cy:number,r:number){
+  ctx.beginPath();
+  for(let i=0;i<5;i++){
+    const a=(i*Math.PI*2)/5-Math.PI/2;
+    i===0?ctx.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r)
+         :ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);
+  }
+  ctx.closePath(); ctx.fill();
+}
+
+function drawSoccer(ctx:CanvasRenderingContext2D,x:number,y:number,r:number,angle:number){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(angle);
+  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.clip();
+  const g=ctx.createRadialGradient(-r*.3,-r*.3,r*.04,0,0,r);
+  g.addColorStop(0,"#fff"); g.addColorStop(.6,"#ddd"); g.addColorStop(1,"#888");
+  ctx.fillStyle=g; ctx.fillRect(-r,-r,r*2,r*2);
+  ctx.fillStyle="#111";
+  pentagon(ctx,0,0,r*.37);
+  for(let i=0;i<5;i++){
+    const a=(i*Math.PI*2)/5-Math.PI/2;
+    pentagon(ctx,Math.cos(a)*r*.71,Math.sin(a)*r*.71,r*.32);
+  }
+  const hl=ctx.createRadialGradient(-r*.3,-r*.3,0,-r*.3,-r*.3,r*.5);
+  hl.addColorStop(0,"rgba(255,255,255,.65)"); hl.addColorStop(1,"rgba(255,255,255,0)");
+  ctx.fillStyle=hl; ctx.fillRect(-r,-r,r*2,r*2);
+  ctx.restore();
+}
+
+function drawGolden(ctx:CanvasRenderingContext2D,x:number,y:number,r:number,t:number){
+  ctx.save(); ctx.translate(x,y);
+  const pulse=.65+.35*Math.sin(t*.09);
+  const glow=ctx.createRadialGradient(0,0,r*.5,0,0,r*2.2);
+  glow.addColorStop(0,`rgba(255,200,0,${.45*pulse})`); glow.addColorStop(1,"rgba(255,200,0,0)");
+  ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(0,0,r*2.2,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.clip();
+  const g=ctx.createRadialGradient(-r*.3,-r*.3,r*.04,0,0,r);
+  g.addColorStop(0,"#fff8a0"); g.addColorStop(.4,"#ffd700");
+  g.addColorStop(.85,"#b8860b"); g.addColorStop(1,"#7a5900");
+  ctx.fillStyle=g; ctx.fillRect(-r,-r,r*2,r*2);
+  ctx.strokeStyle="rgba(255,255,160,.35)"; ctx.lineWidth=1.5;
+  for(let i=0;i<6;i++){
+    const a=(i*Math.PI)/3+t*.013;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r); ctx.stroke();
+  }
+  const hl=ctx.createRadialGradient(-r*.28,-r*.32,0,-r*.28,-r*.32,r*.42);
+  hl.addColorStop(0,"rgba(255,255,255,.75)"); hl.addColorStop(1,"rgba(255,255,255,0)");
+  ctx.fillStyle=hl; ctx.fillRect(-r,-r,r*2,r*2);
+  ctx.restore();
+  ctx.save(); ctx.translate(x,y);
+  ctx.font=`bold ${r*.65}px 'Arial Black',Arial`; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.strokeStyle="#7a5900"; ctx.lineWidth=3; ctx.strokeText("+5",0,1);
+  ctx.fillStyle="#fff"; ctx.fillText("+5",0,1);
+  ctx.restore();
+}
+
+function drawBomb(ctx:CanvasRenderingContext2D,x:number,y:number,r:number,t:number){
+  ctx.save(); ctx.translate(x,y);
+  const pulse=.5+.5*Math.sin(t*.14);
+  const glow=ctx.createRadialGradient(0,0,r*.3,0,0,r*2.3);
+  glow.addColorStop(0,`rgba(255,40,0,${.5*pulse})`); glow.addColorStop(1,"rgba(255,40,0,0)");
+  ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(0,0,r*2.3,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.clip();
+  const g=ctx.createRadialGradient(-r*.25,-r*.25,r*.04,0,0,r);
+  g.addColorStop(0,"#555"); g.addColorStop(.6,"#1a1a1a"); g.addColorStop(1,"#000");
+  ctx.fillStyle=g; ctx.fillRect(-r,-r,r*2,r*2);
+  const hl=ctx.createRadialGradient(-r*.28,-r*.32,0,-r*.28,-r*.32,r*.38);
+  hl.addColorStop(0,"rgba(255,255,255,.28)"); hl.addColorStop(1,"rgba(255,255,255,0)");
+  ctx.fillStyle=hl; ctx.fillRect(-r,-r,r*2,r*2);
+  ctx.restore();
+  ctx.strokeStyle="#c8a020"; ctx.lineWidth=2.5; ctx.lineCap="round";
+  ctx.beginPath(); ctx.moveTo(x+r*.2,y-r*.88);
+  ctx.quadraticCurveTo(x+r*.6,y-r*1.4,x+r*.3,y-r*1.85); ctx.stroke();
+  if(t%8<4){ ctx.fillStyle="#ffe033"; ctx.beginPath(); ctx.arc(x+r*.3,y-r*1.85,3.5,0,Math.PI*2); ctx.fill(); }
+  ctx.font=`${r*.95}px serif`; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText("💀",x,y+2);
+}
+
+function drawBall(ctx:CanvasRenderingContext2D,kind:BallKind,x:number,y:number,r:number,angle:number,t:number){
+  if(kind==="soccer")      drawSoccer(ctx,x,y,r,angle);
+  else if(kind==="golden") drawGolden(ctx,x,y,r,t);
+  else                     drawBomb(ctx,x,y,r,t);
+}
+
+// ─── Webcam cover-fit draw ──────────────────────────────────────────────────────
+// Draws the video cropped/scaled to fill the canvas (object-fit: cover), mirrored.
+function drawVideoCover(
+  ctx: CanvasRenderingContext2D,
+  video: HTMLVideoElement,
+  CW: number, CH: number,
+) {
+  const canvasAspect = CW / CH;
+  let drawW: number, drawH: number;
+  if (canvasAspect > VIDEO_ASPECT) {
+    // canvas is wider than 4:3 → fit width, crop height
+    drawW = CW;
+    drawH = CW / VIDEO_ASPECT;
+  } else {
+    // canvas is taller than 4:3 → fit height, crop width
+    drawH = CH;
+    drawW = CH * VIDEO_ASPECT;
+  }
+  const offsetX = (CW - drawW) / 2;
+  const offsetY = (CH - drawH) / 2;
+
+  // Mirror horizontally
+  ctx.save();
+  ctx.translate(CW, 0);
+  ctx.scale(-1, 1);
+  // In mirrored space the image must be placed so it visually lands at offsetX:
+  // visual x = CW - (tx + tw), so tx = CW - offsetX - drawW
+  ctx.drawImage(video, CW - offsetX - drawW, offsetY, drawW, drawH);
+  ctx.restore();
+}
+
+// Converts a normalised MediaPipe landmark to canvas pixel, accounting for
+// the same cover-fit crop so that the skeleton lines up with the webcam image.
+function lmToCanvas(lm: LM, CW: number, CH: number): { x: number; y: number } {
+  const canvasAspect = CW / CH;
+  let drawW: number, drawH: number;
+  if (canvasAspect > VIDEO_ASPECT) {
+    drawW = CW; drawH = CW / VIDEO_ASPECT;
+  } else {
+    drawH = CH; drawW = CH * VIDEO_ASPECT;
+  }
+  const offsetX = (CW - drawW) / 2;
+  const offsetY = (CH - drawH) / 2;
+  // Mirror: visual_x = CW - (lm.x * drawW + offsetX)
+  return {
+    x: CW - (lm.x * drawW + offsetX),
+    y: lm.y * drawH + offsetY,
+  };
+}
+
+// ─── Component ─────────────────────────────────────────────────────────────────
+
+export const DemoView = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef     = useRef<HTMLVideoElement>(null);
+  const canvasRef    = useRef<HTMLCanvasElement>(null);
+
+  const [phase, setPhase]               = useState<GamePhase>("idle");
+  const [displayScore, setDisplayScore] = useState(0);
+  const [displayTime, setDisplayTime]   = useState(GAME_SECS);
+  const [finalScore, setFinalScore]     = useState(0);
+  const [caughtCount, setCaughtCount]   = useState(0);
+  const [lostCount, setLostCount]       = useState(0);
+
+  const phaseRef      = useRef<GamePhase>("idle");
+  const scoreRef      = useRef(0);
+  const timeRef       = useRef(GAME_SECS);
+  const comboRef      = useRef(0);
+  const comboTimerRef = useRef(0);
+  const frameRef      = useRef(0);
+  const elapsedRef    = useRef(0); // seconds since game start – drives speed ramp
+  const startGameRef  = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    const container = containerRef.current!;
+    const canvas    = canvasRef.current!;
+    const ctx       = canvas.getContext("2d")!;
+
+    let CW = container.clientWidth  || 800;
+    let CH = container.clientHeight || 600;
+    canvas.width = CW; canvas.height = CH;
+
+    // ── MediaPipe ─────────────────────────────────────────────────────────
+    const hands = new Hands({
+      locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`,
+    });
+    hands.setOptions({ maxNumHands:1, modelComplexity:1,
+      minDetectionConfidence:.7, minTrackingConfidence:.7 });
+
+    let landmarks: LM[] | null = null;
+    hands.onResults((r: Results) => {
+      landmarks = r.multiHandLandmarks?.length ? r.multiHandLandmarks[0] : null;
+    });
+
+    if (videoRef.current) {
+      const cam = new Camera(videoRef.current, {
+        onFrame: async () => {
+          if (videoRef.current) await hands.send({ image: videoRef.current });
+        },
+        width: VIDEO_W, height: VIDEO_H,
+      });
+      cam.start();
+    }
+
+    // ── Matter.js ─────────────────────────────────────────────────────────
+    const engine = Engine.create();
+    engine.gravity.y = 1.1;
+    const world = engine.world;
+
+    const ceiling   = Bodies.rectangle(CW/2, -12,      CW*3, 24, { isStatic:true });
+    const leftWall  = Bodies.rectangle(-12,  CH/2,     24, CH*3, { isStatic:true });
+    const rightWall = Bodies.rectangle(CW+12, CH/2,    24, CH*3, { isStatic:true });
+    // No ground body – we detect y > CH manually and explode
+    World.add(world, [ceiling, leftWall, rightWall]);
+
+    const ro = new ResizeObserver(() => {
+      CW = container.clientWidth; CH = container.clientHeight;
+      canvas.width = CW; canvas.height = CH;
+      Body.setPosition(ceiling,   { x: CW/2,   y: -12 });
+      Body.setPosition(leftWall,  { x: -12,    y: CH/2 });
+      Body.setPosition(rightWall, { x: CW+12,  y: CH/2 });
+    });
+    ro.observe(container);
+
+    // ── Game data ─────────────────────────────────────────────────────────
+    let balls:          ExtBall[]       = [];
+    let caughtBalls:    BallKind[]      = [];
+    let lostBalls:      BallKind[]      = [];
+    let particles:      Particle[]      = [];
+    let floatTexts:     FloatText[]     = [];
+    let catchAnims:     FlyAnim[]       = [];
+    let lostAnims:      FlyAnim[]       = [];
+    let explosionRings: ExplosionRing[] = [];
+
+    // Returns pixel position of slot in the right (caught) panel
+    function caughtSlot(idx: number){
+      const col = idx % 2, row = Math.floor(idx / 2);
+      return { x: CW - PANEL_W + 10 + col*(MINI_R*2+8) + MINI_R, y: 58 + row*(MINI_R*2+8) + MINI_R };
+    }
+    // Returns pixel position of slot in the left (lost) panel
+    function lostSlot(idx: number){
+      const col = idx % 2, row = Math.floor(idx / 2);
+      return { x: PANEL_W - 10 - col*(MINI_R*2+8) - MINI_R, y: 58 + row*(MINI_R*2+8) + MINI_R };
+    }
+
+    // ── Speed ramp helpers ────────────────────────────────────────────────
+    // Returns a 0-1 progress value (0 = start of game, 1 = 30 s in = max speed)
+    function speedFactor(){ return Math.min(elapsedRef.current / 30, 1); }
+    function randomVelocity(){
+      const sf  = speedFactor();
+      const spd = 3 + sf * 9;          // 3 → 12 px/frame
+      const angle = (Math.random() - .5) * Math.PI * .6; // ±54 deg
+      return { x: Math.cos(angle) * spd * (Math.random()<.5?1:-1), y: Math.abs(Math.sin(angle)) * spd * .5 };
+    }
+
+    // ── Particles helpers ─────────────────────────────────────────────────
+    function spawnParticles(x:number,y:number,color:string,n=12){
+      for(let i=0;i<n;i++){
+        const a=(Math.PI*2*i)/n+Math.random()*.5, s=2+Math.random()*5;
+        particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,life:1,color,size:3+Math.random()*5});
+      }
+    }
+    function spawnExplosion(x:number,y:number){
+      // 3 expanding rings + debris
+      const colors=["#ff8c00","#ff4400","#ffcc00"];
+      colors.forEach((c,i)=>{
+        explosionRings.push({ x, y, r: BALL_R*.5, maxR: BALL_R*(2.2+i*1.1), life:1, color:c });
+      });
+      // Fire debris particles
+      for(let i=0;i<22;i++){
+        const a=Math.random()*Math.PI*2, s=2+Math.random()*9;
+        const colors2=["#ff6600","#ff3300","#ffaa00","#ffff00","#fff"];
+        particles.push({
+          x, y,
+          vx:Math.cos(a)*s, vy:Math.sin(a)*s-3,
+          life:1,
+          color:colors2[Math.floor(Math.random()*colors2.length)],
+          size:4+Math.random()*7,
+        });
+      }
+    }
+    function addFloat(x:number,y:number,text:string,color:string){
+      floatTexts.push({x,y,text,life:1,color});
+    }
+
+    // ── Hand hit test ─────────────────────────────────────────────────────
+    function handHits(bx:number,by:number):boolean{
+      if(!landmarks) return false;
+      const pts = landmarks.map(lm => lmToCanvas(lm, CW, CH));
+      for(const [a,b] of HAND_BONES){
+        const isPalm = a<2||b<2;
+        const segR   = isPalm ? 22 : 16;
+        if(ptSegDist(bx,by,pts[a].x,pts[a].y,pts[b].x,pts[b].y) < BALL_R+segR) return true;
+      }
+      return false;
+    }
+
+    // ── Start / restart ───────────────────────────────────────────────────
+    function startGame(){
+      balls.forEach(b=>World.remove(world,b.body));
+      balls=[]; caughtBalls=[]; lostBalls=[];
+      particles=[]; floatTexts=[]; catchAnims=[]; lostAnims=[]; explosionRings=[];
+      scoreRef.current=0; timeRef.current=GAME_SECS;
+      comboRef.current=0; comboTimerRef.current=0; elapsedRef.current=0;
+      phaseRef.current="playing";
+      setPhase("playing"); setDisplayScore(0); setDisplayTime(GAME_SECS);
+      setCaughtCount(0); setLostCount(0);
+      for(let i=0;i<3;i++) spawnBall("soccer");
+      spawnBall("golden");
+    }
+    startGameRef.current = startGame;
+
+    function spawnBall(kind?: BallKind){
+      const k    = kind ?? randomKind();
+      const gameL = PANEL_W + BALL_R + 10;
+      const gameR = CW - PANEL_W - BALL_R - 10;
+      const body  = Bodies.circle(
+        Math.random()*(gameR-gameL)+gameL,
+        Math.random()*CH*.25 + 10,
+        BALL_R,
+        { restitution:.72, friction:.01, frictionAir:.012 },
+      );
+      const vel = randomVelocity();
+      Body.setVelocity(body, vel);
+      World.add(world, body);
+      balls.push({ body, kind:k, hitCooldown:0 });
+    }
+
+    // ── Draw loop ─────────────────────────────────────────────────────────
+    let animId: number;
+    let lastTs = 0;
+    let timeSinceSpawn = 0;
+
+    function loop(ts: number){
+      animId = requestAnimationFrame(loop);
+      const dt = lastTs ? Math.min(ts-lastTs,50) : 16;
+      lastTs = ts;
+      frameRef.current++;
+      const t = frameRef.current;
+
+      Engine.update(engine, 1000/60);
+      ctx.clearRect(0,0,CW,CH);
+
+      // ── Webcam (cover-fit, mirrored) ───────────────────────────────
+      if(videoRef.current) drawVideoCover(ctx, videoRef.current, CW, CH);
+
+      const isPlaying = phaseRef.current === "playing";
+
+      // ── Timer + speed ramp ─────────────────────────────────────────
+      if(isPlaying){
+        const dtSec = dt/1000;
+        timeRef.current -= dtSec;
+        elapsedRef.current += dtSec;
+        if(timeRef.current<=0){
+          timeRef.current=0;
+          phaseRef.current="gameover";
+          setPhase("gameover");
+          setFinalScore(scoreRef.current);
+        }
+        setDisplayTime(Math.ceil(timeRef.current));
+
+        timeSinceSpawn += dt;
+        // Spawn interval shrinks from 3s → 0.8s over 30 s
+        const interval = Math.max(3000 - elapsedRef.current*74, 800);
+        if(timeSinceSpawn > interval && balls.length < 10){
+          spawnBall(); timeSinceSpawn=0;
+        }
+        comboTimerRef.current -= dt;
+        if(comboTimerRef.current<=0) comboRef.current=0;
+      }
+
+      // ── Classify balls: ground vs caught ──────────────────────────
+      const toGround: ExtBall[] = [];
+      const toCatch:  ExtBall[] = [];
+
+      balls.forEach(b=>{
+        const bx = CW - b.body.position.x;
+        const by = b.body.position.y;
+        if(b.hitCooldown>0){ b.hitCooldown--; return; }
+        if(by > CH + BALL_R + 5){ toGround.push(b); return; }
+        if(isPlaying && handHits(bx,by)) toCatch.push(b);
+      });
+
+      // Ground → explode → left panel
+      toGround.forEach(b=>{
+        const bx = CW - b.body.position.x;
+        spawnExplosion(bx, CH);
+        const idx  = lostBalls.length;
+        const slot = lostSlot(idx);
+        lostBalls.push(b.kind);
+        setLostCount(lostBalls.length);
+        lostAnims.push({ sx:bx, sy:CH-10, tx:slot.x, ty:slot.y, kind:b.kind, progress:0 });
+        World.remove(world,b.body);
+      });
+      balls = balls.filter(b=>!toGround.includes(b));
+
+      // Catch → right panel
+      toCatch.forEach(b=>{
+        const bx=CW-b.body.position.x, by=b.body.position.y;
+        const pts = scoreFor(b.kind);
+        if(pts>0){
+          comboRef.current++;
+          comboTimerRef.current=1600;
+          const total = pts*Math.max(1,comboRef.current);
+          scoreRef.current = Math.max(0,scoreRef.current+total);
+          setDisplayScore(scoreRef.current);
+          addFloat(bx,by-36, comboRef.current>1?`x${comboRef.current} +${total}`:`+${pts}`,
+            comboRef.current>2?"#ffd700":"#00ff99");
+          spawnParticles(bx,by, b.kind==="golden"?"#ffd700":"#00ff99", 18);
+        } else {
+          comboRef.current=0;
+          scoreRef.current=Math.max(0,scoreRef.current+pts);
+          setDisplayScore(scoreRef.current);
+          addFloat(bx,by-36,`${pts}`,"#ff4444");
+          spawnParticles(bx,by,"#ff3300",12);
+        }
+        const idx  = caughtBalls.length;
+        const slot = caughtSlot(idx);
+        caughtBalls.push(b.kind);
+        setCaughtCount(caughtBalls.length);
+        catchAnims.push({ sx:bx, sy:by, tx:slot.x, ty:slot.y, kind:b.kind, progress:0 });
+        World.remove(world,b.body);
+      });
+      balls = balls.filter(b=>!toCatch.includes(b));
+
+      // ── Draw physics balls ─────────────────────────────────────────
+      balls.forEach(b=>{
+        drawBall(ctx, b.kind, CW-b.body.position.x, b.body.position.y, BALL_R, -b.body.angle, t);
+      });
+
+      // ── Fly animations (catch → right panel) ─────────────────────
+      catchAnims = catchAnims.filter(a=>a.progress<1);
+      catchAnims.forEach(a=>{
+        a.progress = Math.min(1, a.progress+.06);
+        const e=1-Math.pow(1-a.progress,3);
+        const cx=a.sx+(a.tx-a.sx)*e, cy=a.sy+(a.ty-a.sy)*e;
+        ctx.save(); ctx.globalAlpha=1-a.progress*.3;
+        drawBall(ctx,a.kind,cx,cy,BALL_R*(1-a.progress*.45),0,t);
+        ctx.restore();
+      });
+
+      // ── Fly animations (lost → left panel) ────────────────────────
+      lostAnims = lostAnims.filter(a=>a.progress<1);
+      lostAnims.forEach(a=>{
+        a.progress = Math.min(1, a.progress+.055);
+        const e=1-Math.pow(1-a.progress,3);
+        const cx=a.sx+(a.tx-a.sx)*e, cy=a.sy+(a.ty-a.sy)*e;
+        ctx.save(); ctx.globalAlpha=1-a.progress*.25;
+        drawBall(ctx,a.kind,cx,cy,BALL_R*(1-a.progress*.42),0,t);
+        // Fire overlay on lost balls
+        ctx.globalAlpha=(1-a.progress)*.7;
+        ctx.font=`${(BALL_R*(1-a.progress*.42))*1.1}px serif`;
+        ctx.textAlign="center"; ctx.textBaseline="middle";
+        ctx.fillText("🔥",cx,cy);
+        ctx.restore();
+      });
+
+      // ── Explosion rings ────────────────────────────────────────────
+      explosionRings = explosionRings.filter(r=>r.life>0);
+      explosionRings.forEach(ring=>{
+        ring.life -= .045;
+        ring.r    += (ring.maxR-ring.r)*.15;
+        ctx.beginPath();
+        ctx.arc(ring.x, ring.y, ring.r, 0, Math.PI*2);
+        ctx.strokeStyle = ring.color + Math.floor(ring.life*180).toString(16).padStart(2,"0");
+        ctx.lineWidth   = 4*ring.life;
+        ctx.stroke();
+      });
+
+      // ── Particles ─────────────────────────────────────────────────
+      particles = particles.filter(p=>p.life>0);
+      particles.forEach(p=>{
+        p.x+=p.vx; p.y+=p.vy; p.vy+=.3; p.life-=.038;
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,Math.max(0,p.size*p.life),0,Math.PI*2);
+        ctx.fillStyle=p.color+Math.floor(p.life*255).toString(16).padStart(2,"0");
+        ctx.fill();
+      });
+
+      // ── Float texts ────────────────────────────────────────────────
+      floatTexts = floatTexts.filter(f=>f.life>0);
+      floatTexts.forEach(f=>{
+        f.y-=1.3; f.life-=.022;
+        ctx.save(); ctx.globalAlpha=f.life;
+        ctx.font="bold 22px 'Arial Black',Arial"; ctx.textAlign="center";
+        ctx.strokeStyle="rgba(0,0,0,.8)"; ctx.lineWidth=4;
+        ctx.strokeText(f.text,f.x,f.y);
+        ctx.fillStyle=f.color; ctx.fillText(f.text,f.x,f.y);
+        ctx.restore();
+      });
+
+      // ── Hand skeleton ──────────────────────────────────────────────
+      if(landmarks){
+        const pts = landmarks.map(lm=>lmToCanvas(lm,CW,CH));
+        // Soft glow pass
+        ctx.save(); ctx.globalCompositeOperation="lighter"; ctx.lineCap="round";
+        for(const [a,b] of HAND_BONES){
+          ctx.strokeStyle="rgba(40,160,255,.1)"; ctx.lineWidth=28;
+          ctx.beginPath(); ctx.moveTo(pts[a].x,pts[a].y); ctx.lineTo(pts[b].x,pts[b].y); ctx.stroke();
+        }
+        ctx.globalCompositeOperation="source-over"; ctx.restore();
+        // Lines
+        ctx.save(); ctx.lineCap="round";
+        for(const [a,b] of HAND_BONES){
+          ctx.strokeStyle=a<2||b<2?"rgba(120,220,255,.88)":"rgba(80,200,255,.72)";
+          ctx.lineWidth  =a<2||b<2?7:4.5;
+          ctx.beginPath(); ctx.moveTo(pts[a].x,pts[a].y); ctx.lineTo(pts[b].x,pts[b].y); ctx.stroke();
+        }
+        // Joints
+        for(let i=0;i<pts.length;i++){
+          ctx.beginPath(); ctx.arc(pts[i].x,pts[i].y,i===0?6:3.5,0,Math.PI*2);
+          ctx.fillStyle="rgba(210,245,255,.95)"; ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // ── LEFT panel: lost balls (on fire) ──────────────────────────
+      ctx.fillStyle="rgba(20,0,0,.78)";
+      ctx.fillRect(0,0,PANEL_W,CH);
+
+      // Right border glow (red)
+      const leftBorder=ctx.createLinearGradient(PANEL_W-3,0,PANEL_W,0);
+      leftBorder.addColorStop(0,"rgba(255,80,0,0)");
+      leftBorder.addColorStop(1,"rgba(255,80,0,.55)");
+      ctx.fillStyle=leftBorder; ctx.fillRect(PANEL_W-3,0,3,CH);
+
+      ctx.fillStyle="rgba(255,60,0,.12)";
+      ctx.fillRect(0,0,PANEL_W,46);
+      ctx.fillStyle="rgba(255,120,60,.9)";
+      ctx.font="bold 11px 'Arial Black',Arial"; ctx.textAlign="center";
+      ctx.fillText("MISSED",PANEL_W/2,18);
+      ctx.fillStyle="rgba(255,255,255,.4)"; ctx.font="10px Arial";
+      ctx.fillText(`${lostBalls.length} balls`,PANEL_W/2,34);
+      ctx.strokeStyle="rgba(255,60,0,.25)"; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(8,46); ctx.lineTo(PANEL_W-8,46); ctx.stroke();
+
+      lostBalls.forEach((kind,idx)=>{
+        const s=lostSlot(idx);
+        if(s.y+MINI_R<CH-8){
+          drawBall(ctx,kind,s.x,s.y,MINI_R,0,t);
+          // fire badge
+          ctx.font=`${MINI_R}px serif`; ctx.textAlign="center"; ctx.textBaseline="middle";
+          ctx.fillText("🔥",s.x,s.y);
+        }
+      });
+
+      // ── RIGHT panel: caught balls ──────────────────────────────────
+      const px=CW-PANEL_W;
+      ctx.fillStyle="rgba(0,10,20,.78)";
+      ctx.fillRect(px,0,PANEL_W,CH);
+
+      // Left border glow (cyan)
+      const rightBorder=ctx.createLinearGradient(px,0,px+3,0);
+      rightBorder.addColorStop(0,"rgba(0,200,255,.55)");
+      rightBorder.addColorStop(1,"rgba(0,200,255,0)");
+      ctx.fillStyle=rightBorder; ctx.fillRect(px,0,3,CH);
+
+      ctx.fillStyle="rgba(0,200,255,.12)";
+      ctx.fillRect(px,0,PANEL_W,46);
+      ctx.fillStyle="rgba(0,220,255,.9)";
+      ctx.font="bold 11px 'Arial Black',Arial"; ctx.textAlign="center";
+      ctx.fillText("CAUGHT",px+PANEL_W/2,18);
+      ctx.fillStyle="rgba(255,255,255,.4)"; ctx.font="10px Arial";
+      ctx.fillText(`${caughtBalls.length} balls`,px+PANEL_W/2,34);
+      ctx.strokeStyle="rgba(0,200,255,.25)"; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(px+8,46); ctx.lineTo(CW-8,46); ctx.stroke();
+
+      caughtBalls.forEach((kind,idx)=>{
+        const s=caughtSlot(idx);
+        if(s.y+MINI_R<CH-8) drawBall(ctx,kind,s.x,s.y,MINI_R,0,t);
+      });
+
+      // ── HUD ───────────────────────────────────────────────────────
+      if(isPlaying){
+        const hudH=50;
+        ctx.fillStyle="rgba(0,0,0,.55)";
+        ctx.fillRect(PANEL_W,0,px-PANEL_W,hudH);
+
+        const tPct=timeRef.current/GAME_SECS;
+        ctx.fillStyle=tPct>.4?"#00e676":tPct>.2?"#ffb300":"#f44336";
+        ctx.fillRect(PANEL_W,hudH-7,(px-PANEL_W)*tPct,7);
+
+        ctx.fillStyle="#fff"; ctx.font="bold 24px 'Arial Black',Arial"; ctx.textAlign="left";
+        ctx.fillText(`⚽ ${scoreRef.current}`,PANEL_W+14,34);
+
+        const secs=Math.ceil(timeRef.current);
+        ctx.fillStyle=secs<=10?"#f44336":"#fff"; ctx.textAlign="right";
+        ctx.fillText(`⏱ ${secs}s`,px-14,34);
+
+        // Speed indicator
+        const sf=Math.round(speedFactor()*100);
+        ctx.fillStyle=`rgba(255,${255-sf*2},0,.75)`;
+        ctx.font="bold 10px Arial"; ctx.textAlign="center";
+        ctx.fillText(`⚡ SPEED ${sf}%`,(PANEL_W+px)/2,48);
+
+        if(comboRef.current>1){
+          ctx.textAlign="center"; ctx.fillStyle="#ffd700";
+          ctx.font=`bold ${Math.min(18+comboRef.current*1.5,28)}px 'Arial Black',Arial`;
+          ctx.shadowColor="#ffd700"; ctx.shadowBlur=14;
+          ctx.fillText(`🔥 COMBO x${comboRef.current}`,(PANEL_W+px)/2,33);
+          ctx.shadowBlur=0;
+        }
+      }
+
+      if(phaseRef.current!=="playing"){
+        ctx.fillStyle="rgba(0,0,0,.42)";
+        ctx.fillRect(PANEL_W,0,px-PANEL_W,CH);
+      }
+    }
+
+    animId = requestAnimationFrame(loop);
+
+    return ()=>{
+      cancelAnimationFrame(animId);
+      ro.disconnect();
+      World.clear(world,false);
+      Engine.clear(engine);
+    };
+  }, []);
+
+  return (
+    <div style={{
+      display:"flex", flexDirection:"column",
+      height:"100vh", background:"#080810",
+      overflow:"hidden", fontFamily:"'Arial Black',Arial,sans-serif", color:"#fff",
+    }}>
+      {/* Header */}
+      <div style={{
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+        padding:"6px 16px", flexShrink:0,
+        borderBottom:"1px solid rgba(0,200,255,.15)",
+        background:"rgba(0,0,0,.45)",
+      }}>
+        <h1 style={{
+          margin:0, fontSize:"1.2rem",
+          background:"linear-gradient(90deg,#00e5ff,#69ff47)",
+          WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+          letterSpacing:".05em",
+        }}>⚽ AR Ball Smash</h1>
+        <div style={{ display:"flex", gap:14, fontSize:".7rem", opacity:.75, flexWrap:"wrap", justifyContent:"flex-end" }}>
+          <span>⚽ <b>+1</b></span>
+          <span style={{color:"#ffd700"}}>🥇 <b>+5</b></span>
+          <span style={{color:"#ff6666"}}>💣 <b>−3</b></span>
+          <span style={{color:"#00e5ff"}}>🔥 Combo mult.</span>
+          <span style={{color:"#ff8c00"}}>💨 Miss = fire'd</span>
+        </div>
+      </div>
+
+      {/* Game */}
+      <div ref={containerRef} style={{ flex:1, position:"relative", overflow:"hidden" }}>
+        <video ref={videoRef} style={{display:"none"}} autoPlay playsInline />
+        <canvas ref={canvasRef} style={{ position:"absolute", inset:0 }} />
+
+        {phase==="idle" && (
+          <div style={{
+            position:"absolute", inset:0, paddingLeft:PANEL_W, paddingRight:PANEL_W,
+            display:"flex", flexDirection:"column", alignItems:"center",
+            justifyContent:"center", gap:12,
+          }}>
+            <div style={{fontSize:"3rem"}}>⚽</div>
+            <div style={{fontSize:"1.6rem",fontWeight:900}}>Ready to smash?</div>
+            <div style={{fontSize:".82rem",opacity:.72,textAlign:"center",maxWidth:280,lineHeight:1.7}}>
+              Use your <b>whole hand</b> to catch balls.<br/>
+              Miss a ball → it <b style={{color:"#ff8c00"}}>explodes</b> on the floor and stacks left 🔥<br/>
+              Catch balls → they stack right ✅<br/>
+              Speed increases as time goes on!
+            </div>
+            <button onClick={()=>startGameRef.current?.()} style={{
+              marginTop:6, padding:"13px 42px", fontSize:"1.1rem", fontWeight:900,
+              fontFamily:"inherit", border:"none", borderRadius:"50px", cursor:"pointer",
+              background:"linear-gradient(135deg,#00e5ff,#0090ff)", color:"#000",
+              boxShadow:"0 4px 24px rgba(0,200,255,.55)", letterSpacing:".05em",
+            }}>START GAME</button>
+          </div>
+        )}
+
+        {phase==="gameover" && (
+          <div style={{
+            position:"absolute", inset:0, paddingLeft:PANEL_W, paddingRight:PANEL_W,
+            display:"flex", flexDirection:"column", alignItems:"center",
+            justifyContent:"center", gap:10,
+          }}>
+            <div style={{fontSize:"2.5rem"}}>🏆</div>
+            <div style={{fontSize:"1.8rem",fontWeight:900}}>TIME'S UP!</div>
+            <div style={{
+              fontSize:"3.6rem", fontWeight:900, color:"#ffd700",
+              textShadow:"0 0 28px rgba(255,215,0,.8)", lineHeight:1.1,
+            }}>{finalScore}</div>
+            <div style={{fontSize:".82rem",opacity:.65,display:"flex",gap:16}}>
+              <span>✅ {caughtCount} caught</span>
+              <span style={{color:"#ff8c00"}}>🔥 {lostCount} missed</span>
+            </div>
+            <button onClick={()=>startGameRef.current?.()} style={{
+              marginTop:10, padding:"13px 42px", fontSize:"1.1rem", fontWeight:900,
+              fontFamily:"inherit", border:"none", borderRadius:"50px", cursor:"pointer",
+              background:"linear-gradient(135deg,#69ff47,#00e676)", color:"#000",
+              boxShadow:"0 4px 24px rgba(80,255,80,.45)", letterSpacing:".05em",
+            }}>PLAY AGAIN</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

@@ -8,5 +8,8 @@ export const applicationConfig = {
                 { name: 'microfrontend', url: 'http://localhost:3001' }
             ]
         }
+    },
+    server: {
+        url: 'http://localhost:8000/'
     }
 }

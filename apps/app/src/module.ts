@@ -46,7 +46,8 @@ import {
   config, module, Module as DIModule,
   around,
   Invocation,
-  methods
+  methods,
+  ErrorManager
 } from '@novx/core';
 
 import {
@@ -138,8 +139,8 @@ class ApplicationConfigModule extends DIModule {
 
   // aspects for commands
 
- @around(methods().decoratedWith(command as any).thatAreSync())
-   around(invocation: Invocation): any {
+  @around(methods().decoratedWith(command as any).thatAreSync())
+  around(invocation: Invocation): any {
      const ctrl = invocation.target as Controller
      const name = invocation.method().name
 
@@ -153,23 +154,20 @@ class ApplicationConfigModule extends DIModule {
        console.log(`< ${name} finished in ${duration.toFixed(2)} ms`)
        ctrl.enable(name)
      }
-   }
+  }
 
-   @around(methods().decoratedWith(command as any).thatAreAsync())
-   async aroundAsync(invocation: Invocation): Promise<any> {
+  @around(methods().decoratedWith(command as any).thatAreAsync())
+  async aroundAsync(invocation: Invocation): Promise<any> {
      const ctrl = invocation.target as Controller
      const name = invocation.method().name
 
-     ctrl.disable(name)
      const start = performance.now()
-
      try {
        return await invocation.proceed()
      }
      finally {
        const duration = performance.now() - start
        console.log(`< ${name} finished in ${duration.toFixed(2)} ms`)
-       ctrl.enable(name)
      }
    }
 }
@@ -189,6 +187,7 @@ export class ApplicationModule extends AbstractModule {
 
   @create()
   createLocaleManager() : LocaleManager {
+    const e = ErrorManager
     return new LocaleManager({
       locale: "de-DE",
       supportedLocales: ["de-DE", "en-US"],
@@ -226,18 +225,22 @@ export class ApplicationModule extends AbstractModule {
   }
 
   @create()
-  createEndpointLocator() : EndpointLocator {
+  createEndpointLocator(@config("server.url") server: string) : EndpointLocator {
       return new PatternEndpointLocator({
           match: '.*',
-          url: 'http://localhost:8000/',
+          url: server,
         })
   }
 
   // lifecycle
 
   @onRunning()
-  async onRunning(featureRegistry: FeatureRegistry, deploymentManager: DeploymentManager, sessionManager: SessionManager<any,any>, routerManager: RouterManager) {
-      // load deployment
+  async onRunning(featureRegistry: FeatureRegistry, deploymentManager: DeploymentManager, sessionManager: SessionManager<any,any>, routerManager: RouterManager, errorManager: ErrorManager) {
+     // error handler
+     
+     errorManager.registerHandler(this)
+
+     // load deployment
 
       await deploymentManager.loadDeployment({
           application: "portal",
@@ -248,15 +251,20 @@ export class ApplicationModule extends AbstractModule {
 
       routerManager.setRoot(() => (featureRegistry.finder()
         .withTag('portal')
-        .withVisibility(sessionManager.hasSession())
+        .matchesSession(sessionManager.hasSession())
         .findOne()
-        ))
+      ))
   }
 
   // error handlers
 
   @catchError()
-  public handleError(error: any) {
+  public handleError(error: Error) {
+    console.log(error)
+  }
+
+  @catchError()
+  public handleAnyError(error: any) {
     console.log(error)
   }
 
@@ -275,7 +283,7 @@ export class ApplicationModule extends AbstractModule {
           recursive: false,
           regExp: /\.svg$/
         }
-       ));
+    ));
 
     // session manager
 

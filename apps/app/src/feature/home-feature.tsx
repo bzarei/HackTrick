@@ -17,7 +17,7 @@ class Counter extends Controller {
   @computed
   get double() { return this.count * 2 }
 
-  @command()
+  @command({name: "increment"})
   async increment() {
     await new Promise(r => setTimeout(r, 1200))
     this.count++
@@ -438,7 +438,7 @@ export class HomePage extends React.Component {
   static contextType = EnvironmentContext;
   declare context: Environment;
 
-  render() {
+  render() { //return <div> <CounterView/> <DemoView/></div>
       //return <CounterView/>
       return <DemoView/>
      //return  <FeatureRegistryVisualizer features={this.context.get(FeatureRegistry).filter((f) => f.parent == undefined)}></FeatureRegistryVisualizer>
