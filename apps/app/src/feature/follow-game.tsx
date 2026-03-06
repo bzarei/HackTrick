@@ -665,7 +665,83 @@ function generateMatchSummary(events: MatchEvent[], homeTeam: TeamInfo, awayTeam
   return summary;
 }
 
-// ── Matchday Sub-Components ─────────────────────────────────────────────────
+// ── Google Gemini AI Summary Generator ──────────────────────────────────────
+
+const GEMINI_API_KEY = "AIzaSyAvZwA50YfuDbgX_3ZNfjOswyXJYcCETdw";
+const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+async function generateGeminiSummary(
+  events: MatchEvent[],
+  homeTeam: TeamInfo,
+  awayTeam: TeamInfo,
+  stats: MatchStats
+): Promise<string> {
+  if (!GEMINI_API_KEY) {
+    throw new Error("Gemini API key not configured. Get one free at https://aistudio.google.com/apikey");
+  }
+
+  const goals = events.filter(e => e.type === "goal");
+  const homeGoals = goals.filter(g => g.team === "home");
+  const awayGoals = goals.filter(g => g.team === "away");
+
+  const matchData = {
+    homeTeam: { name: homeTeam.name, shortName: homeTeam.shortName, score: homeGoals.length },
+    awayTeam: { name: awayTeam.name, shortName: awayTeam.shortName, score: awayGoals.length },
+    events: events.map(e => ({
+      minute: e.minute, type: e.type, team: e.team,
+      player: e.player, assist: e.assist, detail: e.detail,
+    })),
+    stats: {
+      possession: `${stats.possession[0]}%-${stats.possession[1]}%`,
+      xG: `${stats.xG[0].toFixed(2)}-${stats.xG[1].toFixed(2)}`,
+      shots: `${stats.shots[0]}-${stats.shots[1]}`,
+      shotsOnTarget: `${stats.shotsOnTarget[0]}-${stats.shotsOnTarget[1]}`,
+    },
+  };
+
+  const prompt = `You are a professional football commentator and analyst. Write an engaging, dramatic match summary based on the following match data. 
+
+Match: ${homeTeam.name} vs ${awayTeam.name}
+Final Score: ${homeGoals.length} - ${awayGoals.length}
+
+Match Data (JSON):
+${JSON.stringify(matchData, null, 2)}
+
+Requirements:
+- Write 150-200 words
+- Use an exciting, professional sports journalism tone
+- Mention key moments, goals, and standout players
+- Include tactical insights based on the stats
+- Add a verdict at the end
+- Use emojis sparingly for section headers (⚽, 📊, 🏆, 🧠)
+- Format with clear paragraphs`;
+
+  const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.8,
+        maxOutputTokens: 512,
+        topP: 0.95,
+      },
+    }),
+  });
+
+  console.log("[Gemini] Response status:", response.status);
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Gemini API error (${response.status}): ${err}`);
+  }
+
+  const data = await response.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error("No text returned from Gemini API");
+  return text;
+}
 
 function EventIcon({ type }: { type: MatchEvent["type"] }) {
   const icons: Record<string, string> = {
@@ -771,6 +847,10 @@ function MatchdayCompanion({ onBack }: { onBack: () => void }) {
   const eventsEndRef = useRef<HTMLDivElement>(null);
   const [favoriteTeam, setFavoriteTeam] = useState<"home" | "away" | null>(null);
   const [alertsEnabled, setAlertsEnabled] = useState(true);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const geminiTriggeredRef = useRef(false);
 
   const homeScore = events.filter(e => e.type === "goal" && e.team === "home").length;
   const awayScore = events.filter(e => e.type === "goal" && e.team === "away").length;
@@ -806,6 +886,9 @@ function MatchdayCompanion({ onBack }: { onBack: () => void }) {
     setEvents([]);
     setCurrentMinute(0);
     eventIndexRef.current = 0;
+    setAiSummary(null);
+    setAiError(null);
+    geminiTriggeredRef.current = false;
   }, [stopSimulation]);
 
   const loadAll = useCallback(() => {
@@ -823,6 +906,7 @@ function MatchdayCompanion({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     eventsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [events.length]);
+
 
   // Progress percentage
   const progress = events.length / FULL_EVENTS.length * 100;
@@ -847,6 +931,35 @@ function MatchdayCompanion({ onBack }: { onBack: () => void }) {
   }, [events]);
 
   const summary = useMemo(() => generateMatchSummary(events, HOME_TEAM, AWAY_TEAM, interpStats), [events, interpStats]);
+
+  const requestGeminiSummary = useCallback(async () => {
+    console.log("[Gemini] requestGeminiSummary called, events:", events.length, "apiKey:", !!GEMINI_API_KEY);
+    if (events.length === 0) return;
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const result = await generateGeminiSummary(events, HOME_TEAM, AWAY_TEAM, interpStats);
+      console.log("[Gemini] Success, got result:", result?.substring(0, 100));
+      setAiSummary(result);
+    } catch (e: any) {
+      console.error("[Gemini] Error:", e);
+      setAiError(e.message || "Failed to generate AI summary");
+    } finally {
+      setAiLoading(false);
+    }
+  }, [events, interpStats]);
+
+  // Auto-trigger Gemini when switching to summary tab with events
+  useEffect(() => {
+    if (tab === "summary" && events.length > 0 && !geminiTriggeredRef.current && GEMINI_API_KEY) {
+      console.log("[Gemini] Auto-triggering summary generation");
+      geminiTriggeredRef.current = true;
+      requestGeminiSummary();
+    }
+    if (events.length === 0) {
+      geminiTriggeredRef.current = false;
+    }
+  }, [tab, events.length, requestGeminiSummary]);
 
   const tabBtn = (t: MatchdayTab, label: string, emoji: string) => (
     <button key={t} onClick={() => setTab(t)}
@@ -1106,21 +1219,22 @@ function MatchdayCompanion({ onBack }: { onBack: () => void }) {
 
         {tab === "summary" && (
           <div style={{ maxWidth: 650, margin: "0 auto" }}>
+            {/* Template-based summary */}
             <div style={{
               background: MD_COLORS.card, borderRadius: 14, padding: 24,
               border: `1px solid ${MD_COLORS.cardBorder}`,
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                <span style={{ fontSize: 20 }}>🤖</span>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>AI Match Summary</h3>
+                <span style={{ fontSize: 20 }}>📝</span>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Template Summary</h3>
                 <span style={{
                   fontSize: 10, padding: "2px 8px", borderRadius: 4,
-                  background: MD_COLORS.accent + "22", color: MD_COLORS.accent, fontWeight: 600,
-                }}>Auto-generated</span>
+                  background: MD_COLORS.dim + "22", color: MD_COLORS.dim, fontWeight: 600,
+                }}>Rule-based</span>
               </div>
               {events.length === 0 ? (
                 <div style={{ textAlign: "center", padding: 30, color: MD_COLORS.dim }}>
-                  The AI summary will be generated as events unfold. Start the simulation to see it!
+                  The summary will be generated as events unfold. Start the simulation to see it!
                 </div>
               ) : (
                 <pre style={{
@@ -1137,7 +1251,96 @@ function MatchdayCompanion({ onBack }: { onBack: () => void }) {
                     style={{
                       padding: "8px 16px", borderRadius: 8, border: `1px solid ${MD_COLORS.cardBorder}`,
                       background: "transparent", color: MD_COLORS.dim, cursor: "pointer", fontSize: 12, fontFamily: "inherit",
-                    }}>📋 Copy Summary</button>
+                    }}>📋 Copy</button>
+                </div>
+              )}
+            </div>
+
+            {/* Gemini AI Summary */}
+            <div style={{
+              background: MD_COLORS.card, borderRadius: 14, padding: 24, marginTop: 16,
+              border: `1px solid ${MD_COLORS.cardBorder}`,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <span style={{ fontSize: 20 }}>✨</span>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Gemini AI Summary</h3>
+                <span style={{
+                  fontSize: 10, padding: "2px 8px", borderRadius: 4,
+                  background: "#4285f422", color: "#4285f4", fontWeight: 600,
+                }}>Powered by Google Gemini</span>
+              </div>
+
+              {!GEMINI_API_KEY ? (
+                <div style={{
+                  textAlign: "center", padding: 24, color: MD_COLORS.dim,
+                  background: MD_COLORS.surface, borderRadius: 10,
+                }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>🔑</div>
+                  <div style={{ fontSize: 13, marginBottom: 8 }}>
+                    Gemini API Key not configured.
+                  </div>
+                  <div style={{ fontSize: 12 }}>
+                    Get a free key at{" "}
+                    <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer"
+                      style={{ color: "#4285f4", textDecoration: "underline" }}>
+                      aistudio.google.com/apikey
+                    </a>
+                    {" "}and set it in <code style={{ background: MD_COLORS.surface, padding: "2px 6px", borderRadius: 4 }}>GEMINI_API_KEY</code>
+                  </div>
+                </div>
+              ) : events.length === 0 ? (
+                <div style={{ textAlign: "center", padding: 30, color: MD_COLORS.dim }}>
+                  Start the simulation first, then generate an AI-powered summary!
+                </div>
+              ) : aiSummary ? (
+                <>
+                  <pre style={{
+                    whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: "'Segoe UI', sans-serif",
+                    fontSize: 13, lineHeight: 1.8, color: MD_COLORS.white, margin: 0,
+                    background: MD_COLORS.surface, borderRadius: 10, padding: 20,
+                  }}>
+                    {aiSummary}
+                  </pre>
+                  <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <button onClick={() => { navigator.clipboard?.writeText(aiSummary); }}
+                      style={{
+                        padding: "8px 16px", borderRadius: 8, border: `1px solid ${MD_COLORS.cardBorder}`,
+                        background: "transparent", color: MD_COLORS.dim, cursor: "pointer", fontSize: 12, fontFamily: "inherit",
+                      }}>📋 Copy</button>
+                    <button onClick={requestGeminiSummary} disabled={aiLoading}
+                      style={{
+                        padding: "8px 16px", borderRadius: 8, border: `1px solid ${MD_COLORS.cardBorder}`,
+                        background: "transparent", color: MD_COLORS.dim, cursor: aiLoading ? "wait" : "pointer", fontSize: 12, fontFamily: "inherit",
+                      }}>🔄 Regenerate</button>
+                  </div>
+                </>
+              ) : (
+                <div style={{ textAlign: "center", padding: 20 }}>
+                  {aiError && (
+                    <div style={{
+                      background: "#ef444422", border: "1px solid #ef444444", borderRadius: 8,
+                      padding: 12, marginBottom: 16, color: "#ef4444", fontSize: 12, textAlign: "left",
+                    }}>
+                      ⚠️ {aiError}
+                    </div>
+                  )}
+                  <button onClick={requestGeminiSummary} disabled={aiLoading}
+                    style={{
+                      padding: "12px 28px", borderRadius: 10, border: "none", fontWeight: 700,
+                      background: aiLoading ? MD_COLORS.dim : "linear-gradient(135deg, #4285f4, #34a853)",
+                      color: "#ffffff", cursor: aiLoading ? "wait" : "pointer",
+                      fontSize: 14, fontFamily: "inherit", transition: "all .2s",
+                      opacity: aiLoading ? 0.7 : 1,
+                    }}>
+                    {aiLoading ? (
+                      <span>⏳ Generating with Gemini...</span>
+                    ) : (
+                      <span>✨ Generate AI Summary with Gemini</span>
+                    )}
+                  </button>
+                  <div style={{ fontSize: 11, color: MD_COLORS.dim, marginTop: 8 }}>
+                    Free • Powered by Google Gemini 2.0 Flash
+                  </div>
                 </div>
               )}
             </div>

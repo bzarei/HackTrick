@@ -217,6 +217,7 @@ export class ApplicationModule extends AbstractModule {
   @create()
   createDeploymentManager(loader: DeploymentLoader, featureRegistry: FeatureRegistry) : DeploymentManager {
       return new DeploymentManager({
+        hasPermission: (permission: string) => permission!= 'iran-quiz', // for testing
         featureRegistry: featureRegistry,
         loader: loader,
         localManifest: manifest as Manifest,

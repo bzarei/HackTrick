@@ -120,7 +120,7 @@
       "tags": [
         "menu"
       ],
-      "permissions": [],
+      "permissions": ["iran-quiz"],
       "features": [],
       "visibility": [
         "private",
