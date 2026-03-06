@@ -1,5 +1,12 @@
 <symbol id="soccer" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2"/>
-    <path d="M12 2l2.5 4.5h5L16 10l1.5 5-5.5-2.5L6.5 15 8 10 4.5 6.5h5z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+    <!-- Green grass background -->
+    <circle cx="12" cy="12" r="11" fill="#4CAF50"/>
+    <!-- White ball -->
+    <circle cx="12" cy="12" r="7" fill="white" stroke="#333" stroke-width="0.5"/>
+    <!-- Black pentagon patches on the ball -->
+    <polygon points="12,6.5 13.8,8 13.2,10.2 10.8,10.2 10.2,8" fill="#333"/>
+    <polygon points="16.5,10.5 17.2,12.5 15.5,14 13.8,13 14.2,11" fill="#333"/>
+    <polygon points="7.5,10.5 9.8,11 10.2,13 8.5,14 6.8,12.5" fill="#333"/>
+    <polygon points="9.5,15.5 10.5,13.8 13.5,13.8 14.5,15.5 12,17" fill="#333"/>
 </symbol>
 

@@ -56,20 +56,20 @@ const STORAGE_PREFIX      = "wcquiz_";
 const MAX_LEADERBOARD     = 20;
 
 const COLORS = {
-  bg:        "#0d1b0e",
-  bgCard:    "#132215",
-  primary:   "#1b5e20",
-  primaryLt: "#2e7d32",
-  gold:      "#ffd700",
-  goldDark:  "#b8960f",
-  white:     "#f5f5f5",
-  dimWhite:  "#b0b0b0",
+  bg:        "#ffffff",
+  bgCard:    "#fff0f6",
+  primary:   "#e20074",
+  primaryLt: "#ff3399",
+  gold:      "#e20074",
+  goldDark:  "#b0005c",
+  white:     "#1a1a1a",
+  dimWhite:  "#555555",
   correct:   "#43a047",
   wrong:     "#d32f2f",
-  accent:    "#00e676",
+  accent:    "#ff3399",
   danger:    "#ff5252",
-  surface:   "rgba(255,255,255,0.06)",
-  border:    "rgba(255,255,255,0.1)",
+  surface:   "rgba(226,0,116,0.06)",
+  border:    "rgba(226,0,116,0.15)",
 };
 
 const CATEGORY_META: Record<Category, { label: string; emoji: string }> = {
@@ -256,7 +256,7 @@ const CSS_KEYFRAMES = `
 }
 @keyframes wcq-timerWarn { 0%,100%{color:#f44336} 50%{color:#ff8a65} }
 @keyframes wcq-slideDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
-@keyframes wcq-glow { 0%,100%{box-shadow:0 0 12px rgba(255,215,0,.3)} 50%{box-shadow:0 0 28px rgba(255,215,0,.7)} }
+@keyframes wcq-glow { 0%,100%{box-shadow:0 0 12px rgba(226,0,116,.3)} 50%{box-shadow:0 0 28px rgba(226,0,116,.7)} }
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -278,7 +278,7 @@ function TimerCircle({ seconds, maxSeconds, isLive }: {
     <div style={{ position: "relative", width: sz, height: sz, flexShrink: 0 }}>
       <svg width={sz} height={sz} style={{ transform: "rotate(-90deg)" }}>
         <circle cx={radius + stroke} cy={radius + stroke} r={radius}
-          fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} />
+          fill="none" stroke="rgba(226,0,116,0.12)" strokeWidth={stroke} />
         <circle cx={radius + stroke} cy={radius + stroke} r={radius}
           fill="none"
           stroke={warn ? COLORS.danger : seconds > 10 ? COLORS.accent : COLORS.gold}
@@ -318,9 +318,9 @@ function PowerUpBar({ powerUps, onUse, disabled, isLive }: {
             style={{
               padding: isLive ? "10px 20px" : "6px 14px",
               fontSize: isLive ? 18 : 13, fontWeight: 700, fontFamily: "inherit",
-              border: `1px solid ${used ? "rgba(255,255,255,.08)" : COLORS.gold + "55"}`,
+              border: `1px solid ${used ? "rgba(226,0,116,.1)" : COLORS.gold + "55"}`,
               borderRadius: 8, cursor: used || disabled ? "not-allowed" : "pointer",
-              background: used ? "rgba(255,255,255,.03)" : "rgba(255,215,0,.08)",
+              background: used ? "rgba(226,0,116,.03)" : "rgba(226,0,116,.08)",
               color: used ? "#555" : COLORS.gold, opacity: used ? 0.4 : 1,
               transition: "all .2s",
             }}>
@@ -347,7 +347,7 @@ function CategorySelector({ selected, onToggle, isLive }: {
               padding: isLive ? "20px 12px" : "16px 12px",
               borderRadius: 12,
               border: `2px solid ${active ? COLORS.gold : COLORS.border}`,
-              background: active ? "rgba(255,215,0,.12)" : COLORS.surface,
+              background: active ? "rgba(226,0,116,.12)" : COLORS.surface,
               color: active ? COLORS.gold : COLORS.dimWhite,
               cursor: "pointer", fontSize: isLive ? 20 : 15, fontWeight: 700,
               fontFamily: "inherit", transition: "all .2s",
@@ -380,7 +380,7 @@ function LeaderboardTable({ entries, highlightName, isLive }: {
           {entries.map((e, i) => {
             const hl = e.name === highlightName;
             return (
-              <tr key={i} style={{ background: hl ? "rgba(255,215,0,.08)" : "transparent", borderBottom: `1px solid ${COLORS.surface}` }}>
+              <tr key={i} style={{ background: hl ? "rgba(226,0,116,.08)" : "transparent", borderBottom: `1px solid ${COLORS.surface}` }}>
                 <td style={{ padding: "8px 10px", fontWeight: 800, color: i < 3 ? COLORS.gold : COLORS.dimWhite }}>
                   {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
                 </td>
@@ -404,7 +404,7 @@ function Confetti() {
       left: Math.random() * 100,
       delay: Math.random() * 2,
       dur: 2 + Math.random() * 2,
-      color: ["#ffd700", "#00e676", "#ff5252", "#2196f3", "#ff9800", "#e040fb"][i % 6],
+      color: ["#e20074", "#ff3399", "#ff5252", "#ff80ab", "#ff9800", "#e040fb"][i % 6],
       size: 6 + Math.random() * 8,
     })), []);
   return (
@@ -660,7 +660,7 @@ export const QuizView = () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   const containerStyle: React.CSSProperties = {
-    minHeight: "100vh", background: `linear-gradient(160deg, ${COLORS.bg} 0%, #0a1f0c 50%, #0d1a1f 100%)`,
+    minHeight: "100vh", background: `linear-gradient(160deg, #ffffff 0%, #fff0f6 50%, #ffe0ef 100%)`,
     color: COLORS.white, fontFamily: "'Segoe UI','Helvetica Neue',Arial,sans-serif",
     display: "flex", flexDirection: "column", overflow: "auto",
   };
@@ -746,7 +746,7 @@ export const QuizView = () => {
           style={{
             padding: "12px 32px", borderRadius: 10, border: "none", fontWeight: 800,
             background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.primaryLt})`,
-            color: COLORS.white, cursor: selectedCats.size === 0 ? "not-allowed" : "pointer",
+            color: "#ffffff", cursor: selectedCats.size === 0 ? "not-allowed" : "pointer",
             fontSize: isLive ? 20 : 15, fontFamily: "inherit",
             opacity: selectedCats.size === 0 ? 0.4 : 1, transition: "all .2s",
             animation: selectedCats.size > 0 ? "wcq-glow 2s infinite" : undefined,
@@ -770,13 +770,13 @@ export const QuizView = () => {
         {/* HUD */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10,
-          padding: "10px 16px", background: "rgba(0,0,0,.3)", borderRadius: 12,
+          padding: "10px 16px", background: "rgba(226,0,116,.06)", borderRadius: 12,
         }}>
           <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
             {players.map((p, i) => (
               <div key={i} style={{
                 padding: "4px 14px", borderRadius: 8,
-                background: i === currentPlayerIdx ? "rgba(255,215,0,.12)" : "transparent",
+                background: i === currentPlayerIdx ? "rgba(226,0,116,.12)" : "transparent",
                 border: i === currentPlayerIdx ? `1px solid ${COLORS.gold}55` : "1px solid transparent",
                 transition: "all .3s",
               }}>
@@ -816,7 +816,7 @@ export const QuizView = () => {
             {doubleActive && (
               <span style={{
                 padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 800,
-                background: "rgba(255,215,0,.15)", color: COLORS.gold, border: `1px solid ${COLORS.gold}55`,
+                background: "rgba(226,0,116,.15)", color: COLORS.gold, border: `1px solid ${COLORS.gold}55`,
                 animation: "wcq-pulse 1s infinite",
               }}>✖️2 ACTIVE</span>
             )}
@@ -899,7 +899,7 @@ export const QuizView = () => {
             {players.map((p, i) => (
               <div key={i} style={{
                 padding: "16px 24px", borderRadius: 12,
-                background: (isDuel && p === winner && !tied) ? "rgba(255,215,0,.1)" : COLORS.surface,
+                background: (isDuel && p === winner && !tied) ? "rgba(226,0,116,.1)" : COLORS.surface,
                 border: `1px solid ${(isDuel && p === winner && !tied) ? COLORS.gold : COLORS.border}`,
                 minWidth: 140,
               }}>
@@ -956,7 +956,7 @@ export const QuizView = () => {
                 style={{
                   padding: "10px 20px", borderRadius: 8, border: "none", fontWeight: 700,
                   background: `linear-gradient(135deg, ${COLORS.gold}, ${COLORS.goldDark})`,
-                  color: "#000", cursor: "pointer", fontSize: 13, fontFamily: "inherit",
+                  color: "#ffffff", cursor: "pointer", fontSize: 13, fontFamily: "inherit",
                   opacity: (!isDuel && !nameInput.trim()) ? 0.4 : 1,
                 }}>
                 {isDuel ? "Save Both Scores" : "Save Score"} 🏅
@@ -976,7 +976,7 @@ export const QuizView = () => {
               style={{
                 padding: "10px 22px", borderRadius: 10, border: "none", fontWeight: 700,
                 background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.primaryLt})`,
-                color: COLORS.white, cursor: "pointer", fontSize: 14, fontFamily: "inherit",
+                color: "#ffffff", cursor: "pointer", fontSize: 14, fontFamily: "inherit",
               }}>Play Again ⚽</button>
           </div>
         </div>

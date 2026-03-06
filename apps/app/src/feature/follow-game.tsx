@@ -61,20 +61,20 @@ const STORAGE_PREFIX      = "wcquiz_";
 const MAX_LEADERBOARD     = 20;
 
 const COLORS = {
-  bg:        "#0d1b0e",
-  bgCard:    "#132215",
-  primary:   "#1b5e20",
-  primaryLt: "#2e7d32",
-  gold:      "#ffd700",
-  goldDark:  "#b8960f",
-  white:     "#f5f5f5",
-  dimWhite:  "#b0b0b0",
+  bg:        "#ffffff",
+  bgCard:    "#fff0f6",
+  primary:   "#e20074",
+  primaryLt: "#ff3399",
+  gold:      "#e20074",
+  goldDark:  "#b0005c",
+  white:     "#1a1a1a",
+  dimWhite:  "#555555",
   correct:   "#43a047",
   wrong:     "#d32f2f",
-  accent:    "#00e676",
+  accent:    "#ff3399",
   danger:    "#ff5252",
-  surface:   "rgba(255,255,255,0.06)",
-  border:    "rgba(255,255,255,0.1)",
+  surface:   "rgba(226,0,116,0.06)",
+  border:    "rgba(226,0,116,0.15)",
 };
 
 const CATEGORY_META: Record<Category, { label: string; emoji: string }> = {
@@ -478,18 +478,18 @@ interface StandingsRow {
 // ── Matchday Constants ─────────────────────────────────────────────────────
 
 const MD_COLORS = {
-  bg: "#0a0f1a",
-  card: "#111827",
-  cardBorder: "#1e293b",
-  primary: "#3b82f6",
-  primaryDark: "#1d4ed8",
-  accent: "#10b981",
-  gold: "#f59e0b",
+  bg: "#ffffff",
+  card: "#fff0f6",
+  cardBorder: "rgba(226,0,116,0.15)",
+  primary: "#e20074",
+  primaryDark: "#b0005c",
+  accent: "#ff3399",
+  gold: "#e20074",
   red: "#ef4444",
-  white: "#f1f5f9",
-  dim: "#94a3b8",
-  surface: "rgba(255,255,255,0.04)",
-  scoreBg: "#0f172a",
+  white: "#1a1a1a",
+  dim: "#777777",
+  surface: "rgba(226,0,116,0.04)",
+  scoreBg: "#fff5f9",
 };
 
 const HOME_TEAM: TeamInfo = { name: "Argentina", shortName: "ARG", flag: "🇦🇷", color: "#75aadb" };
