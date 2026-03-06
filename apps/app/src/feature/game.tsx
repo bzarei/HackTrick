@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Hands, Results } from "@mediapipe/hands";
 import { Camera } from "@mediapipe/camera_utils";
-import Matter, { Engine, World, Bodies, Body } from "matter-js";
+import Matter, { Engine, World, Bodies, Body } from 'matter-js';
+import { EnvironmentContext, Feature } from '@novx/portal';
+import { Environment } from '@novx/core';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -17,8 +19,8 @@ interface LM       { x:number; y:number; z:number; }
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
-const BALL_R    = 24;
-const MINI_R    = 11;
+const BALL_R    = 28;
+const MINI_R    = 13;
 const PANEL_W   = 100;  // both left and right panels
 const GAME_SECS = 60;
 const VIDEO_W   = 640;
@@ -50,56 +52,102 @@ function ptSegDist(px:number,py:number,ax:number,ay:number,bx:number,by:number){
   return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));
 }
 
-// ─── Ball renderers ────────────────────────────────────────────────────────────
+// ─── Indian Flag Ball renderers ─────────────────────────────────────────────
+// All balls feature the Indian tricolour (saffron-white-green) with
+// the Ashoka Chakra (24-spoke wheel) in the centre white band.
 
-function pentagon(ctx:CanvasRenderingContext2D,cx:number,cy:number,r:number){
-  ctx.beginPath();
-  for(let i=0;i<5;i++){
-    const a=(i*Math.PI*2)/5-Math.PI/2;
-    i===0?ctx.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r)
-         :ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);
-  }
-  ctx.closePath(); ctx.fill();
-}
+/** Draws the Ashoka Chakra (24-spoke navy wheel) at (0,0) with given radius. */
+function drawAshokaChakra(ctx:CanvasRenderingContext2D, cr:number, alpha:number, t:number){
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  const col = "#000080"; // navy blue
 
-function drawSoccer(ctx:CanvasRenderingContext2D,x:number,y:number,r:number,angle:number){
-  ctx.save(); ctx.translate(x,y); ctx.rotate(angle);
-  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.clip();
-  const g=ctx.createRadialGradient(-r*.3,-r*.3,r*.04,0,0,r);
-  g.addColorStop(0,"#fff"); g.addColorStop(.6,"#ddd"); g.addColorStop(1,"#888");
-  ctx.fillStyle=g; ctx.fillRect(-r,-r,r*2,r*2);
-  ctx.fillStyle="#111";
-  pentagon(ctx,0,0,r*.37);
-  for(let i=0;i<5;i++){
-    const a=(i*Math.PI*2)/5-Math.PI/2;
-    pentagon(ctx,Math.cos(a)*r*.71,Math.sin(a)*r*.71,r*.32);
+  // Outer ring
+  ctx.strokeStyle = col;
+  ctx.lineWidth = Math.max(1, cr*0.12);
+  ctx.beginPath(); ctx.arc(0,0,cr,0,Math.PI*2); ctx.stroke();
+
+  // Inner hub
+  ctx.fillStyle = col;
+  ctx.beginPath(); ctx.arc(0,0,cr*0.18,0,Math.PI*2); ctx.fill();
+
+  // 24 spokes
+  ctx.strokeStyle = col;
+  ctx.lineWidth = Math.max(0.5, cr*0.06);
+  for(let i=0;i<24;i++){
+    const a = (i*Math.PI*2)/24 + t*0.005;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*cr*0.22, Math.sin(a)*cr*0.22);
+    ctx.lineTo(Math.cos(a)*cr*0.92, Math.sin(a)*cr*0.92);
+    ctx.stroke();
   }
-  const hl=ctx.createRadialGradient(-r*.3,-r*.3,0,-r*.3,-r*.3,r*.5);
-  hl.addColorStop(0,"rgba(255,255,255,.65)"); hl.addColorStop(1,"rgba(255,255,255,0)");
-  ctx.fillStyle=hl; ctx.fillRect(-r,-r,r*2,r*2);
+
+  // Small dots between spokes on the rim
+  ctx.fillStyle = col;
+  for(let i=0;i<24;i++){
+    const a = (i*Math.PI*2)/24 + (Math.PI/24) + t*0.005;
+    ctx.beginPath();
+    ctx.arc(Math.cos(a)*cr*0.78, Math.sin(a)*cr*0.78, cr*0.05, 0, Math.PI*2);
+    ctx.fill();
+  }
   ctx.restore();
 }
 
+/** Draws the Indian flag as horizontal stripes on a ball clipped to radius r at (0,0). */
+function drawIndianFlagBall(ctx:CanvasRenderingContext2D, r:number, t:number){
+  // Clip to circle
+  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.clip();
+
+  const strH = (r*2)/3;
+
+  // Saffron stripe (top)
+  ctx.fillStyle = "#FF9933";
+  ctx.fillRect(-r, -r, r*2, strH);
+
+  // White stripe (middle)
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(-r, -r+strH, r*2, strH);
+
+  // Green stripe (bottom)
+  ctx.fillStyle = "#138808";
+  ctx.fillRect(-r, -r+strH*2, r*2, strH);
+
+  // Ashoka Chakra in centre
+  drawAshokaChakra(ctx, r*0.28, 0.85, t);
+
+  // Sphere highlight for 3D feel
+  const hl = ctx.createRadialGradient(-r*0.3,-r*0.3,0,-r*0.3,-r*0.3,r*0.6);
+  hl.addColorStop(0,"rgba(255,255,255,.45)"); hl.addColorStop(1,"rgba(255,255,255,0)");
+  ctx.fillStyle = hl; ctx.fillRect(-r,-r,r*2,r*2);
+}
+
+// ── Soccer ball: Indian flag ball ──────────────────────────────────────────
+function drawSoccer(ctx:CanvasRenderingContext2D,x:number,y:number,r:number,angle:number,t:number){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(angle);
+  drawIndianFlagBall(ctx, r, t);
+  ctx.restore();
+  // Outer ring
+  ctx.save(); ctx.translate(x,y);
+  ctx.beginPath(); ctx.arc(0,0,r-0.5,0,Math.PI*2);
+  ctx.strokeStyle="rgba(255,153,51,.4)"; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.restore();
+}
+
+// ── Golden ball: Indian flag ball with golden glow ─────────────────────────
 function drawGolden(ctx:CanvasRenderingContext2D,x:number,y:number,r:number,t:number){
   ctx.save(); ctx.translate(x,y);
+  // Outer glow
   const pulse=.65+.35*Math.sin(t*.09);
   const glow=ctx.createRadialGradient(0,0,r*.5,0,0,r*2.2);
   glow.addColorStop(0,`rgba(255,200,0,${.45*pulse})`); glow.addColorStop(1,"rgba(255,200,0,0)");
   ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(0,0,r*2.2,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.clip();
-  const g=ctx.createRadialGradient(-r*.3,-r*.3,r*.04,0,0,r);
-  g.addColorStop(0,"#fff8a0"); g.addColorStop(.4,"#ffd700");
-  g.addColorStop(.85,"#b8860b"); g.addColorStop(1,"#7a5900");
-  ctx.fillStyle=g; ctx.fillRect(-r,-r,r*2,r*2);
-  ctx.strokeStyle="rgba(255,255,160,.35)"; ctx.lineWidth=1.5;
-  for(let i=0;i<6;i++){
-    const a=(i*Math.PI)/3+t*.013;
-    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r); ctx.stroke();
-  }
-  const hl=ctx.createRadialGradient(-r*.28,-r*.32,0,-r*.28,-r*.32,r*.42);
-  hl.addColorStop(0,"rgba(255,255,255,.75)"); hl.addColorStop(1,"rgba(255,255,255,0)");
-  ctx.fillStyle=hl; ctx.fillRect(-r,-r,r*2,r*2);
+  drawIndianFlagBall(ctx, r, t);
+  // Extra gold shimmer overlay
+  const g=ctx.createRadialGradient(-r*.2,-r*.2,r*.04,0,0,r);
+  g.addColorStop(0,"rgba(255,215,0,.3)"); g.addColorStop(1,"rgba(255,215,0,0)");
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
   ctx.restore();
+  // +5 label
   ctx.save(); ctx.translate(x,y);
   ctx.font=`bold ${r*.65}px 'Arial Black',Arial`; ctx.textAlign="center"; ctx.textBaseline="middle";
   ctx.strokeStyle="#7a5900"; ctx.lineWidth=3; ctx.strokeText("+5",0,1);
@@ -107,33 +155,36 @@ function drawGolden(ctx:CanvasRenderingContext2D,x:number,y:number,r:number,t:nu
   ctx.restore();
 }
 
+// ── Bomb ball: Indian flag ball with dark/danger look ──────────────────────
 function drawBomb(ctx:CanvasRenderingContext2D,x:number,y:number,r:number,t:number){
   ctx.save(); ctx.translate(x,y);
+  // Red danger glow
   const pulse=.5+.5*Math.sin(t*.14);
   const glow=ctx.createRadialGradient(0,0,r*.3,0,0,r*2.3);
   glow.addColorStop(0,`rgba(255,40,0,${.5*pulse})`); glow.addColorStop(1,"rgba(255,40,0,0)");
   ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(0,0,r*2.3,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.clip();
-  const g=ctx.createRadialGradient(-r*.25,-r*.25,r*.04,0,0,r);
-  g.addColorStop(0,"#555"); g.addColorStop(.6,"#1a1a1a"); g.addColorStop(1,"#000");
-  ctx.fillStyle=g; ctx.fillRect(-r,-r,r*2,r*2);
-  const hl=ctx.createRadialGradient(-r*.28,-r*.32,0,-r*.28,-r*.32,r*.38);
-  hl.addColorStop(0,"rgba(255,255,255,.28)"); hl.addColorStop(1,"rgba(255,255,255,0)");
-  ctx.fillStyle=hl; ctx.fillRect(-r,-r,r*2,r*2);
+  drawIndianFlagBall(ctx, r, t);
+  // Dark overlay for menacing look
+  ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2);
+  ctx.fillStyle="rgba(0,0,0,.35)"; ctx.fill();
   ctx.restore();
+  // Fuse
   ctx.strokeStyle="#c8a020"; ctx.lineWidth=2.5; ctx.lineCap="round";
   ctx.beginPath(); ctx.moveTo(x+r*.2,y-r*.88);
   ctx.quadraticCurveTo(x+r*.6,y-r*1.4,x+r*.3,y-r*1.85); ctx.stroke();
   if(t%8<4){ ctx.fillStyle="#ffe033"; ctx.beginPath(); ctx.arc(x+r*.3,y-r*1.85,3.5,0,Math.PI*2); ctx.fill(); }
+  // Skull emoji
   ctx.font=`${r*.95}px serif`; ctx.textAlign="center"; ctx.textBaseline="middle";
   ctx.fillText("💀",x,y+2);
 }
 
 function drawBall(ctx:CanvasRenderingContext2D,kind:BallKind,x:number,y:number,r:number,angle:number,t:number){
-  if(kind==="soccer")      drawSoccer(ctx,x,y,r,angle);
+  if(kind==="soccer")      drawSoccer(ctx,x,y,r,angle,t);
   else if(kind==="golden") drawGolden(ctx,x,y,r,t);
   else                     drawBomb(ctx,x,y,r,t);
 }
+
+
 
 // ─── Webcam cover-fit draw ──────────────────────────────────────────────────────
 // Draws the video cropped/scaled to fill the canvas (object-fit: cover), mirrored.
@@ -187,7 +238,7 @@ function lmToCanvas(lm: LM, CW: number, CH: number): { x: number; y: number } {
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
-export const DemoView = () => {
+export const GameView = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef     = useRef<HTMLVideoElement>(null);
   const canvasRef    = useRef<HTMLCanvasElement>(null);
@@ -739,3 +790,25 @@ export const DemoView = () => {
     </div>
   );
 };
+
+@Feature({
+  id: "game",
+  label: "game",
+  path: "/game",
+  icon: "shell:ar-game",
+  description: "home",
+  tags: [""],
+  permissions: [],
+  features: [],
+  visibility: ["private", "public"]
+})
+export class GamePage extends React.Component {
+  static contextType = EnvironmentContext;
+  declare context: Environment;
+
+  render() { //return <div> <CounterView/> <DemoView/></div>
+    //return <CounterView/>
+    return <GameView/>
+    //return  <FeatureRegistryVisualizer features={this.context.get(FeatureRegistry).filter((f) => f.parent == undefined)}></FeatureRegistryVisualizer>
+  }
+}

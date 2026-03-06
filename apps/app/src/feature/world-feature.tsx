@@ -6,7 +6,7 @@ import {  Feature } from '@novx/portal';
   id: "world",
   i18n: "world",
   path: "/world",
-  icon: "shell:add",
+  icon: "home",
   description: "world",
   tags: ["menu"],
   permissions: [],
@@ -16,11 +16,11 @@ import {  Feature } from '@novx/portal';
 class HelloFeature extends React.Component {
   render() {
     return <div  style={{
-        fontSize: '32px',
-        fontWeight: 'bold',
-        margin: '24px',
-        textAlign: 'center'
-      }}>
+      fontSize: '32px',
+      fontWeight: 'bold',
+      margin: '24px',
+      textAlign: 'center'
+    }}>
       WORLD
     </div>;
   }

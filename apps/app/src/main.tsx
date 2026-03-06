@@ -9,6 +9,11 @@ import { createEnvironment } from './module';
 
 import './feature/hello-feature'
 import './feature/world-feature'
+import './feature/iran'
+import './feature/game'
+import './feature/follow-game'
+import './feature/quiz'
+import './feature/indian'
 import { HomePage } from './feature/home-feature'
 import './navigation/private-navigation'
 import './navigation/public-navigation'

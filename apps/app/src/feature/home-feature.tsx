@@ -292,11 +292,11 @@ interface FeatureNodeProps {
 }
 
 function FeatureNode({
-  feature,
-  depth = 0,
-  onSelect,
-  selected,
-}: FeatureNodeProps) {
+                       feature,
+                       depth = 0,
+                       onSelect,
+                       selected,
+                     }: FeatureNodeProps) {
   const [open, setOpen] = useState<boolean>(depth < 2);
   const hasChildren = !!feature.children?.length;
   const isSelected = selected?.id === feature.id;
@@ -379,8 +379,8 @@ interface FeatureRegistryVisualizerProps {
 }
 
 export default function FeatureRegistryVisualizer({
-  features = [],
-}: FeatureRegistryVisualizerProps) {
+                                                    features = [],
+                                                  }: FeatureRegistryVisualizerProps) {
   const [selected, setSelected] = useState<FeatureMetadata | null>(null);
   const [query, setQuery] = useState<string>("");
 
@@ -427,9 +427,9 @@ const styles = {
   id: "home",
   i18n: "home",
   path: "/",
-  icon: "shell:add",
+  icon: "home",
   description: "home",
-  tags: [""],
+  tags: ["menu"],
   permissions: [],
   features: [],
   visibility: ["private", "public"]
@@ -439,8 +439,8 @@ export class HomePage extends React.Component {
   declare context: Environment;
 
   render() { //return <div> <CounterView/> <DemoView/></div>
-      //return <CounterView/>
-      return <DemoView/>
-     //return  <FeatureRegistryVisualizer features={this.context.get(FeatureRegistry).filter((f) => f.parent == undefined)}></FeatureRegistryVisualizer>
+    //return <CounterView/>
+    return <DemoView/>
+    //return  <FeatureRegistryVisualizer features={this.context.get(FeatureRegistry).filter((f) => f.parent == undefined)}></FeatureRegistryVisualizer>
   }
 }

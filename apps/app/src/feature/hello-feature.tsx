@@ -8,7 +8,7 @@ import { Translator } from '@novx/i18n';
   id: "hello",
   i18n: "hello",
   path: "/hello",
-  icon: "shell:add",
+  icon: "home",
   description: "hello",
   tags: ["menu"],
   permissions: [],
@@ -17,17 +17,17 @@ import { Translator } from '@novx/i18n';
 })
 class HelloFeature extends React.Component {
   static contextType = I18NContext
-   declare context: I18N;
+  declare context: I18N;
 
   render() {
     const { tr } = this.context
 
     return <div  style={{
-        fontSize: '32px',
-        fontWeight: 'bold',
-        margin: '24px',
-        textAlign: 'center'
-      }}>
+      fontSize: '32px',
+      fontWeight: 'bold',
+      margin: '24px',
+      textAlign: 'center'
+    }}>
       {tr("portal:hello.label")}
     </div>;
   }

@@ -10,8 +10,8 @@ export interface NavigationListProps {
 }
 
 export const NavigationList: React.FC<NavigationListProps> = ({
-  collapsed = false,
-}) => {
+                                                                collapsed = false,
+                                                              }) => {
   const location = useLocation();
   const [, forceRender] = React.useState(0);
 
@@ -44,11 +44,11 @@ export const NavigationList: React.FC<NavigationListProps> = ({
       .finder()
       .withPath()
       .withoutParent()
-      .withVisibility(sessionManager.hasSession())
+      .matchesSession(sessionManager.hasSession())
       .withTag('menu')
       .find();
 
-      return features
+    return features
   }, [location.pathname]);
 
   /* ----------------------------------------------------

@@ -71,14 +71,90 @@
       ],
       "children": []
     },
-        {
-      "id": "home",
-      "i18n": "home",
-      "path": "/",
-      "component": "HomeFeature",
-      "sourceFile": "apps/app/src/feature/home-feature.tsx",
-      "icon": "home",
-      "description": "home",
+    {
+      "id": "follow-game",
+      "label": "Follow My Game",
+      "path": "/follow-game",
+      "component": "FollowGamePage",
+      "sourceFile": "apps/app/src/feature/follow-game.tsx",
+      "icon": "soccer",
+      "description": "soccer",
+      "tags": [
+        "menu"
+      ],
+      "permissions": [],
+      "features": [],
+      "visibility": [
+        "private",
+        "public"
+      ],
+      "children": []
+    },
+    {
+      "id": "game",
+      "label": "Game with Webcam",
+      "path": "/game",
+      "component": "GamePage",
+      "sourceFile": "apps/app/src/feature/game.tsx",
+      "icon": "soccer",
+      "description": "soccer",
+      "tags": [
+        "menu"
+      ],
+      "permissions": [],
+      "features": [],
+      "visibility": [
+        "private",
+        "public"
+      ],
+      "children": []
+    },
+    {
+      "id": "iran-quiz",
+      "label": "IRAN Quiz",
+      "path": "/iran-quiz",
+      "component": "IranQuizPage",
+      "sourceFile": "apps/app/src/feature/iran.tsx",
+      "icon": "quiz",
+      "description": "quiz",
+      "tags": [
+        "menu"
+      ],
+      "permissions": [],
+      "features": [],
+      "visibility": [
+        "private",
+        "public"
+      ],
+      "children": []
+    },
+    {
+      "id": "india-quiz",
+      "label": "INDIA Quiz",
+      "path": "/india-quiz",
+      "component": "IndiaQuizPage",
+      "sourceFile": "apps/app/src/feature/india.tsx",
+      "icon": "quiz",
+      "description": "quiz",
+      "tags": [
+        "menu"
+      ],
+      "permissions": [],
+      "features": [],
+      "visibility": [
+        "private",
+        "public"
+      ],
+      "children": []
+    },
+    {
+      "id": "quiz",
+      "label": "World Cup Quiz Arena",
+      "path": "/quiz",
+      "component": "QuizPage",
+      "sourceFile": "apps/app/src/feature/quiz.tsx",
+      "icon": "quiz",
+      "description": "quiz",
       "tags": [
         "menu"
       ],

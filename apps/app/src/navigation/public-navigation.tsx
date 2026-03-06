@@ -12,6 +12,7 @@ import { of } from 'rxjs';
 import { Environment } from '@novx/core';
 
 import { NavigationList } from './navigation-list';
+import { ResizableSidebar } from './resizable-sidebar';
 import ModulesModal, { Module } from '../component/modules-dialog';
 import LocaleSwitch from '../component/locale-switch';
 
@@ -193,20 +194,9 @@ export class PublicNavigationFeature extends React.Component<
 
         {/* MAIN CONTENT */}
         <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          <aside
-            style={{
-              width: sidebarCollapsed ? '60px' : '220px',
-              background: '#2c2c3e',
-              color: '#fff',
-              transition: 'width 0.2s',
-              display: 'flex',
-              flexDirection: 'column',
-              flexShrink: 0,
-              overflowY: 'auto',
-            }}
-          >
+          <ResizableSidebar collapsed={sidebarCollapsed}>
             <NavigationList collapsed={sidebarCollapsed} />
-          </aside>
+          </ResizableSidebar>
 
           <main style={{ flex: 1, background: '#f4f4f4', overflowY: 'auto' }}>
             <ReactiveOutlet />
