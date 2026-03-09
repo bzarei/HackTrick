@@ -10,7 +10,7 @@ import { Environment } from "@novx/core";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type MatchdayTab = "live" | "stats" | "table" | "summary";
+type MatchdayTab = "live" | "stats" | "table" | "summary" | "pulse";
 
 interface MatchEvent {
   id: number;
@@ -91,6 +91,9 @@ const KEYFRAMES = `
 @keyframes mc-slideIn { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
 @keyframes mc-newEvt  { from{background:rgba(226,0,116,.12)} to{background:transparent} }
 @keyframes mc-fadeIn  { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+@keyframes mc-glow    { 0%,100%{box-shadow:0 0 8px rgba(226,0,116,.2)} 50%{box-shadow:0 0 24px rgba(226,0,116,.6)} }
+@keyframes mc-breathe { 0%,100%{transform:scale(1);opacity:.7} 50%{transform:scale(1.15);opacity:1} }
+@keyframes mc-waveBar { 0%{height:20%} 25%{height:80%} 50%{height:40%} 75%{height:90%} 100%{height:20%} }
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -395,6 +398,377 @@ Requirements:
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// ███ MATCH PULSE — Emotion Graph, Crowd Noise, Momentum, Win-Probability ███
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Compute an "excitement" score 0–100 for a single event */
+function eventExcitement(evt: MatchEvent): number {
+  const base: Record<string, number> = {
+    goal: 100, penalty: 90, red: 75, var: 60, save: 50,
+    "full-time": 55, "half-time": 30, yellow: 35, substitution: 15,
+    injury: 40, corner: 20, kickoff: 45,
+  };
+  let v = base[evt.type] ?? 10;
+  // late goals are even more exciting
+  if (evt.type === "goal" && evt.minute >= 85) v = 100;
+  if (evt.type === "goal" && evt.minute >= 75) v = Math.max(v, 95);
+  return v;
+}
+
+/** Build cumulative excitement timeline from events */
+function buildExcitementTimeline(events: MatchEvent[]): { minute: number; value: number; label: string }[] {
+  if (events.length === 0) return [];
+  let running = 20; // baseline "ambient" excitement
+  return events.map((evt) => {
+    const spike = eventExcitement(evt);
+    // Blend: excitement decays but big events spike it up
+    running = Math.min(100, Math.max(running * 0.7 + spike * 0.5, spike * 0.8));
+    return {
+      minute: evt.minute,
+      value: Math.round(running),
+      label: evt.type === "goal" ? `⚽ ${evt.player ?? "GOAL"}` : "",
+    };
+  });
+}
+
+/** Compute simple win probability from score + xG + possession */
+function winProbability(
+  hScore: number, aScore: number,
+  hXG: number, aXG: number,
+  hPoss: number, _aPoss: number,
+  minute: number,
+): { home: number; draw: number; away: number } {
+  if (minute === 0) return { home: 0.33, draw: 0.34, away: 0.33 };
+  const timeFactor = Math.min(minute / 120, 1); // how "locked in" is the score
+  // Score dominance
+  const scoreDiff = hScore - aScore;
+  // xG quality bonus
+  const xgDiff = (hXG - aXG) * 0.1;
+  // possession bonus
+  const possDiff = (hPoss - 50) * 0.003;
+
+  const raw = scoreDiff * 0.3 * timeFactor + xgDiff * (1 - timeFactor * 0.5) + possDiff * (1 - timeFactor);
+  // Sigmoid-ish transform
+  const homeP = 1 / (1 + Math.exp(-raw * 2.5));
+  const drawBoost = Math.max(0, 0.25 * (1 - Math.abs(scoreDiff) * 0.5) * (1 - timeFactor * 0.6));
+  const h = Math.max(0.02, homeP - drawBoost / 2);
+  const a = Math.max(0.02, 1 - homeP - drawBoost / 2);
+  const d = Math.max(0.02, drawBoost);
+  const total = h + a + d;
+  return { home: h / total, draw: d / total, away: a / total };
+}
+
+/** Momentum: which team "owns" recent events */
+function computeMomentum(events: MatchEvent[]): number {
+  // Returns -100 (away dominant) to +100 (home dominant)
+  if (events.length === 0) return 0;
+  const recent = events.slice(-8);
+  let m = 0;
+  for (const e of recent) {
+    const w = e.type === "goal" ? 40 : e.type === "save" ? 15 : e.type === "corner" ? 8 : e.type === "yellow" ? -5 : 3;
+    if (e.team === "home") m += w;
+    else if (e.team === "away") m -= w;
+  }
+  return Math.max(-100, Math.min(100, m));
+}
+
+// ── Crowd Noise Synthesizer (Web Audio API) ──────────────────────────────────
+
+class CrowdNoiseEngine {
+  private ctx: AudioContext | null = null;
+  private noiseNode: AudioBufferSourceNode | null = null;
+  private gainNode: GainNode | null = null;
+  private filterNode: BiquadFilterNode | null = null;
+  private running = false;
+
+  start() {
+    if (this.running) return;
+    try {
+      this.ctx = new AudioContext();
+      const sr = this.ctx.sampleRate;
+      const buf = this.ctx.createBuffer(1, sr * 4, sr);
+      const data = buf.getChannelData(0);
+      // Pink-ish noise: sounds like distant crowd murmur
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < data.length; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        b3 = 0.86650 * b3 + white * 0.3104856;
+        b4 = 0.55000 * b4 + white * 0.5329522;
+        b5 = -0.7616 * b5 - white * 0.0168980;
+        data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.05;
+        b6 = white * 0.115926;
+      }
+      this.noiseNode = this.ctx.createBufferSource();
+      this.noiseNode.buffer = buf;
+      this.noiseNode.loop = true;
+
+      this.filterNode = this.ctx.createBiquadFilter();
+      this.filterNode.type = "lowpass";
+      this.filterNode.frequency.value = 800;
+
+      this.gainNode = this.ctx.createGain();
+      this.gainNode.gain.value = 0.15;
+
+      this.noiseNode.connect(this.filterNode);
+      this.filterNode.connect(this.gainNode);
+      this.gainNode.connect(this.ctx.destination);
+      this.noiseNode.start();
+      this.running = true;
+    } catch {
+      /* Web Audio not supported */
+    }
+  }
+
+  stop() {
+    try {
+      this.noiseNode?.stop();
+      this.ctx?.close();
+    } catch { /* ignore */ }
+    this.running = false;
+    this.ctx = null;
+    this.noiseNode = null;
+  }
+
+  /** React to an event type — spike volume & filter for drama */
+  react(eventType: string) {
+    if (!this.running || !this.gainNode || !this.filterNode || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const g = this.gainNode.gain;
+    const f = this.filterNode.frequency;
+
+    switch (eventType) {
+      case "goal":
+        // ROAR: loud, high frequency burst then sustain
+        g.cancelScheduledValues(now);
+        g.setValueAtTime(0.8, now);
+        g.linearRampToValueAtTime(0.5, now + 0.3);
+        g.linearRampToValueAtTime(0.35, now + 2);
+        g.linearRampToValueAtTime(0.15, now + 5);
+        f.setValueAtTime(2200, now);
+        f.linearRampToValueAtTime(1200, now + 2);
+        f.linearRampToValueAtTime(800, now + 5);
+        // Haptic vibration
+        try { navigator.vibrate?.([200, 100, 200, 100, 400]); } catch { /* noop */ }
+        break;
+      case "penalty":
+      case "var":
+        // Tense crowd: rising murmur
+        g.cancelScheduledValues(now);
+        g.setValueAtTime(0.3, now);
+        g.linearRampToValueAtTime(0.45, now + 1);
+        g.linearRampToValueAtTime(0.15, now + 4);
+        f.setValueAtTime(600, now);
+        f.linearRampToValueAtTime(1400, now + 1);
+        f.linearRampToValueAtTime(800, now + 4);
+        break;
+      case "red":
+      case "yellow":
+        // Boos & whistles: mid burst
+        g.cancelScheduledValues(now);
+        g.setValueAtTime(0.4, now);
+        g.linearRampToValueAtTime(0.15, now + 2);
+        f.setValueAtTime(1800, now);
+        f.linearRampToValueAtTime(800, now + 2);
+        break;
+      case "save":
+        // Gasp then "ohhh"
+        g.cancelScheduledValues(now);
+        g.setValueAtTime(0.5, now);
+        g.linearRampToValueAtTime(0.15, now + 1.5);
+        f.setValueAtTime(1600, now);
+        f.linearRampToValueAtTime(800, now + 1.5);
+        break;
+      case "half-time":
+      case "full-time":
+        // Whistle moment, then fade
+        g.cancelScheduledValues(now);
+        g.setValueAtTime(0.5, now);
+        g.linearRampToValueAtTime(0.05, now + 3);
+        break;
+      default:
+        // Gentle murmur bump
+        g.cancelScheduledValues(now);
+        g.setValueAtTime(Math.min(0.25, g.value + 0.05), now);
+        g.linearRampToValueAtTime(0.15, now + 1);
+        break;
+    }
+  }
+
+  isRunning() { return this.running; }
+}
+
+// ── Excitement Graph Component (SVG) ─────────────────────────────────────────
+
+function ExcitementGraph({
+  timeline,
+  currentMinute,
+}: {
+  timeline: { minute: number; value: number; label: string }[];
+  currentMinute: number;
+}) {
+  const W = 600, H = 180, PAD = 30;
+  const maxMin = Math.max(currentMinute, 90, ...timeline.map((t) => t.minute));
+
+  const toX = (m: number) => PAD + ((m / maxMin) * (W - PAD * 2));
+  const toY = (v: number) => H - PAD - ((v / 100) * (H - PAD * 2));
+
+  // Build path
+  let path = "";
+  let areaPath = "";
+  timeline.forEach((pt, i) => {
+    const x = toX(pt.minute);
+    const y = toY(pt.value);
+    if (i === 0) {
+      path = `M${x},${y}`;
+      areaPath = `M${x},${H - PAD}L${x},${y}`;
+    } else {
+      // Smooth curve
+      const prev = timeline[i - 1];
+      const cx = (toX(prev.minute) + x) / 2;
+      path += ` C${cx},${toY(prev.value)} ${cx},${y} ${x},${y}`;
+      areaPath += ` C${cx},${toY(prev.value)} ${cx},${y} ${x},${y}`;
+    }
+  });
+  if (timeline.length > 0) {
+    const last = timeline[timeline.length - 1];
+    areaPath += `L${toX(last.minute)},${H - PAD}Z`;
+  }
+
+  // Goal markers
+  const goalPoints = timeline.filter((t) => t.label);
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto" }}>
+      {/* Grid lines */}
+      {[0, 25, 50, 75, 100].map((v) => (
+        <g key={v}>
+          <line x1={PAD} y1={toY(v)} x2={W - PAD} y2={toY(v)} stroke={C.cardBorder} strokeWidth={0.5} />
+          <text x={PAD - 4} y={toY(v) + 3} textAnchor="end" fontSize={9} fill={C.dim}>{v}</text>
+        </g>
+      ))}
+      {/* Minute markers */}
+      {[0, 15, 30, 45, 60, 75, 90, 105, 120].filter(m => m <= maxMin).map((m) => (
+        <g key={m}>
+          <line x1={toX(m)} y1={PAD} x2={toX(m)} y2={H - PAD} stroke={C.cardBorder} strokeWidth={0.5} strokeDasharray={m === 45 || m === 90 ? "4,2" : "none"} />
+          <text x={toX(m)} y={H - PAD + 14} textAnchor="middle" fontSize={9} fill={C.dim}>{m}'</text>
+        </g>
+      ))}
+      {/* Area fill */}
+      {areaPath && (
+        <path d={areaPath} fill="url(#excGrad)" opacity={0.3} />
+      )}
+      {/* Line */}
+      {path && (
+        <path d={path} fill="none" stroke={C.primary} strokeWidth={2.5} strokeLinecap="round" />
+      )}
+      {/* Goal markers */}
+      {goalPoints.map((pt, i) => (
+        <g key={i}>
+          <circle cx={toX(pt.minute)} cy={toY(pt.value)} r={5} fill={C.primary} stroke="#fff" strokeWidth={2} />
+          <text
+            x={toX(pt.minute)}
+            y={toY(pt.value) - 10}
+            textAnchor="middle"
+            fontSize={8}
+            fontWeight={700}
+            fill={C.text}
+          >
+            {pt.label}
+          </text>
+        </g>
+      ))}
+      {/* Gradient def */}
+      <defs>
+        <linearGradient id="excGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={C.primary} stopOpacity={0.6} />
+          <stop offset="100%" stopColor={C.primary} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      {/* Axis labels */}
+      <text x={W / 2} y={H - 2} textAnchor="middle" fontSize={10} fill={C.dim}>Match Minute</text>
+      <text x={4} y={H / 2} textAnchor="middle" fontSize={10} fill={C.dim} transform={`rotate(-90 4 ${H / 2})`}>
+        Excitement
+      </text>
+    </svg>
+  );
+}
+
+// ── Momentum Meter Component ─────────────────────────────────────────────────
+
+function MomentumMeter({ value }: { value: number }) {
+  // value: -100 (away) to +100 (home)
+  const pct = ((value + 100) / 200) * 100; // 0–100
+  const label = Math.abs(value) < 15 ? "Balanced" : value > 0 ? `${HOME_TEAM.shortName} Pushing` : `${AWAY_TEAM.shortName} Pushing`;
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6 }}>
+        <span style={{ fontWeight: 700, color: HOME_TEAM.color }}>{HOME_TEAM.flag} {HOME_TEAM.shortName}</span>
+        <span style={{ color: C.dim, fontWeight: 600 }}>⚡ {label}</span>
+        <span style={{ fontWeight: 700, color: AWAY_TEAM.color }}>{AWAY_TEAM.shortName} {AWAY_TEAM.flag}</span>
+      </div>
+      <div style={{ position: "relative", height: 12, borderRadius: 6, overflow: "hidden", background: C.surface }}>
+        {/* Home side */}
+        <div style={{
+          position: "absolute", left: 0, top: 0, bottom: 0,
+          width: `${pct}%`,
+          background: `linear-gradient(90deg, ${HOME_TEAM.color}44, ${HOME_TEAM.color})`,
+          transition: "width 1s ease",
+          borderRadius: "6px 0 0 6px",
+        }} />
+        {/* Needle */}
+        <div style={{
+          position: "absolute", left: `${pct}%`, top: -2, width: 3, height: 16,
+          background: C.text, borderRadius: 2, transition: "left 1s ease",
+          boxShadow: "0 0 6px rgba(0,0,0,.3)",
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// ── Win Probability Bar ──────────────────────────────────────────────────────
+
+function WinProbabilityBar({ prob }: { prob: { home: number; draw: number; away: number } }) {
+  const fmt = (v: number) => `${Math.round(v * 100)}%`;
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 6, fontWeight: 700 }}>
+        <span style={{ color: HOME_TEAM.color }}>{HOME_TEAM.flag} {fmt(prob.home)}</span>
+        <span style={{ color: C.dim }}>🎲 Win Probability</span>
+        <span style={{ color: AWAY_TEAM.color }}>{fmt(prob.away)} {AWAY_TEAM.flag}</span>
+      </div>
+      <div style={{ display: "flex", height: 20, borderRadius: 10, overflow: "hidden", fontSize: 10, fontWeight: 700 }}>
+        <div style={{
+          width: `${prob.home * 100}%`, background: HOME_TEAM.color,
+          display: "flex", alignItems: "center", justifyContent: "center", color: "#fff",
+          transition: "width 1s ease", minWidth: prob.home > 0.05 ? 30 : 0,
+        }}>
+          {prob.home >= 0.1 ? fmt(prob.home) : ""}
+        </div>
+        <div style={{
+          width: `${prob.draw * 100}%`, background: C.dim,
+          display: "flex", alignItems: "center", justifyContent: "center", color: "#fff",
+          transition: "width 1s ease", minWidth: prob.draw > 0.05 ? 30 : 0,
+        }}>
+          {prob.draw >= 0.08 ? `Draw ${fmt(prob.draw)}` : ""}
+        </div>
+        <div style={{
+          width: `${prob.away * 100}%`, background: AWAY_TEAM.color,
+          display: "flex", alignItems: "center", justifyContent: "center", color: "#fff",
+          transition: "width 1s ease", minWidth: prob.away > 0.05 ? 30 : 0,
+        }}>
+          {prob.away >= 0.1 ? fmt(prob.away) : ""}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // ███ SMALL REUSABLE COMPONENTS ███
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -642,6 +1016,11 @@ function MatchdayCompanion() {
   const geminiTriggered = useRef(false);
   const [geminiKey, setGeminiKeyState] = useState(() => getGeminiApiKey());
 
+  // ── Pulse / Crowd Noise state ──────────────────────────────────────────────
+  const crowdRef = useRef<CrowdNoiseEngine | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const prevEventsLen = useRef(0);
+
   // ── Derived ────────────────────────────────────────────────────────────────
   const homeScore = events.filter((e) => e.type === "goal" && e.team === "home").length;
   const awayScore = events.filter((e) => e.type === "goal" && e.team === "away").length;
@@ -722,12 +1101,48 @@ function MatchdayCompanion() {
   }, [stopSimulation]);
 
   // Cleanup on unmount
-  useEffect(() => () => { if (simRef.current) clearInterval(simRef.current); }, []);
+  useEffect(() => () => {
+    if (simRef.current) clearInterval(simRef.current);
+    crowdRef.current?.stop();
+  }, []);
 
   // Auto-scroll live feed
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [events.length]);
+
+  // ── Crowd Noise: react to new events ───────────────────────────────────────
+  useEffect(() => {
+    if (events.length > prevEventsLen.current && soundEnabled) {
+      const newest = events[events.length - 1];
+      if (!crowdRef.current) {
+        crowdRef.current = new CrowdNoiseEngine();
+        crowdRef.current.start();
+      }
+      crowdRef.current.react(newest.type);
+    }
+    prevEventsLen.current = events.length;
+  }, [events, soundEnabled]);
+
+  // Start/stop crowd noise engine based on toggle
+  useEffect(() => {
+    if (soundEnabled && !crowdRef.current?.isRunning()) {
+      crowdRef.current = new CrowdNoiseEngine();
+      crowdRef.current.start();
+    } else if (!soundEnabled && crowdRef.current?.isRunning()) {
+      crowdRef.current.stop();
+      crowdRef.current = null;
+    }
+  }, [soundEnabled]);
+
+  // ── Pulse derived data ─────────────────────────────────────────────────────
+  const excitementTimeline = useMemo(() => buildExcitementTimeline(events), [events]);
+  const momentum = useMemo(() => computeMomentum(events), [events]);
+  const prob = useMemo(
+    () => winProbability(homeScore, awayScore, interpStats.xG[0], interpStats.xG[1], interpStats.possession[0], interpStats.possession[1], currentMinute),
+    [homeScore, awayScore, interpStats, currentMinute],
+  );
+  const currentExcitement = excitementTimeline.length > 0 ? excitementTimeline[excitementTimeline.length - 1].value : 0;
 
   // ── Gemini Summary ─────────────────────────────────────────────────────────
   const requestGeminiSummary = useCallback(async () => {
@@ -1029,6 +1444,7 @@ function MatchdayCompanion() {
         {tabBtn("stats", "Stats", "📊")}
         {tabBtn("table", "Table", "📋")}
         {tabBtn("summary", "Summary", "🤖")}
+        {tabBtn("pulse", "Pulse", "💓")}
       </div>
 
       {/* ── Tab Content ────────────────────────────────────────────────────── */}
@@ -1558,6 +1974,185 @@ function MatchdayCompanion() {
                   </div>
                 </div>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* ────────────── PULSE TAB ────────────── */}
+        {tab === "pulse" && (
+          <div style={{ maxWidth: 650, margin: "0 auto" }}>
+            {events.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 40, color: C.dim }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>💓</div>
+                <p style={{ fontSize: 15 }}>Start the simulation to feel the match pulse!</p>
+                <p style={{ fontSize: 12 }}>Excitement graph, crowd noise, momentum & win probability — all live.</p>
+              </div>
+            ) : (
+              <>
+                {/* Crowd Noise Toggle + Current Excitement */}
+                <div style={{
+                  background: C.card, borderRadius: 14, padding: 20,
+                  border: `1px solid ${C.cardBorder}`, marginBottom: 16,
+                  display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    {/* Excitement Gauge */}
+                    <div style={{
+                      width: 56, height: 56, borderRadius: "50%",
+                      background: `conic-gradient(${C.primary} ${currentExcitement}%, ${C.surface} ${currentExcitement}%)`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      animation: currentExcitement > 70 ? "mc-glow 1.5s infinite" : "none",
+                    }}>
+                      <div style={{
+                        width: 42, height: 42, borderRadius: "50%", background: C.bg,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 16, fontWeight: 900, color: C.primary,
+                      }}>
+                        {currentExcitement}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
+                        {currentExcitement >= 80 ? "🔥 ELECTRIC!" :
+                         currentExcitement >= 60 ? "⚡ High Tension" :
+                         currentExcitement >= 40 ? "📈 Building" :
+                         currentExcitement >= 20 ? "😐 Quiet Spell" : "💤 Calm"}
+                      </div>
+                      <div style={{ fontSize: 11, color: C.dim }}>Match Excitement Level</div>
+                    </div>
+                  </div>
+
+                  {/* Sound Toggle */}
+                  <button
+                    onClick={() => setSoundEnabled(!soundEnabled)}
+                    style={{
+                      padding: "8px 18px", borderRadius: 10, border: "none", fontWeight: 700,
+                      background: soundEnabled
+                        ? `linear-gradient(135deg, ${C.primary}, ${C.accent})`
+                        : C.surface,
+                      color: soundEnabled ? "#fff" : C.dim,
+                      cursor: "pointer", fontSize: 12, fontFamily: "inherit",
+                      display: "flex", alignItems: "center", gap: 6,
+                      transition: "all .2s",
+                    }}
+                  >
+                    {soundEnabled ? (
+                      <>
+                        <span style={{ display: "flex", alignItems: "flex-end", gap: 1, height: 14 }}>
+                          {[0.4, 0.7, 1, 0.6].map((d, i) => (
+                            <span key={i} style={{
+                              width: 3, background: "#fff", borderRadius: 1,
+                              animation: `mc-waveBar ${0.5 + d * 0.5}s ${i * 0.1}s ease-in-out infinite alternate`,
+                            }} />
+                          ))}
+                        </span>
+                        Crowd ON
+                      </>
+                    ) : (
+                      <>🔇 Crowd OFF</>
+                    )}
+                  </button>
+                </div>
+
+                {/* Excitement Timeline Graph */}
+                <div style={{
+                  background: C.card, borderRadius: 14, padding: 20,
+                  border: `1px solid ${C.cardBorder}`, marginBottom: 16,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                    <span style={{ fontSize: 18 }}>📈</span>
+                    <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Excitement Timeline</h3>
+                    <span style={{
+                      fontSize: 10, padding: "2px 8px", borderRadius: 4,
+                      background: C.primary + "22", color: C.primary, fontWeight: 600,
+                    }}>Live</span>
+                  </div>
+                  <ExcitementGraph timeline={excitementTimeline} currentMinute={currentMinute} />
+                  <div style={{ fontSize: 11, color: C.dim, marginTop: 8, textAlign: "center" }}>
+                    Goal moments marked with ⚽ — hover over the graph to explore
+                  </div>
+                </div>
+
+                {/* Momentum Meter */}
+                <div style={{
+                  background: C.card, borderRadius: 14, padding: 20,
+                  border: `1px solid ${C.cardBorder}`, marginBottom: 16,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                    <span style={{ fontSize: 18 }}>⚡</span>
+                    <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Match Momentum</h3>
+                  </div>
+                  <MomentumMeter value={momentum} />
+                  <div style={{ fontSize: 11, color: C.dim, marginTop: 4 }}>
+                    Based on recent events — goals, saves, corners & cards in the last 8 events
+                  </div>
+                </div>
+
+                {/* Win Probability */}
+                <div style={{
+                  background: C.card, borderRadius: 14, padding: 20,
+                  border: `1px solid ${C.cardBorder}`, marginBottom: 16,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                    <span style={{ fontSize: 18 }}>🎲</span>
+                    <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Win Probability</h3>
+                    <span style={{
+                      fontSize: 10, padding: "2px 8px", borderRadius: 4,
+                      background: C.dim + "22", color: C.dim, fontWeight: 600,
+                    }}>Model</span>
+                  </div>
+                  <WinProbabilityBar prob={prob} />
+                  <div style={{ fontSize: 11, color: C.dim, marginTop: 8 }}>
+                    Calculated from score, xG, possession & match time. Updates live as events happen.
+                  </div>
+                </div>
+
+                {/* Key Moments Heatstrip */}
+                <div style={{
+                  background: C.card, borderRadius: 14, padding: 20,
+                  border: `1px solid ${C.cardBorder}`,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                    <span style={{ fontSize: 18 }}>🗺️</span>
+                    <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>Key Moments Heatstrip</h3>
+                  </div>
+                  <div style={{
+                    display: "flex", height: 32, borderRadius: 6, overflow: "hidden",
+                    background: C.surface, position: "relative",
+                  }}>
+                    {events.map((evt) => {
+                      const maxMin = Math.max(currentMinute, 90);
+                      const left = `${(evt.minute / maxMin) * 100}%`;
+                      const isGoal = evt.type === "goal";
+                      const isCard = evt.type === "yellow" || evt.type === "red";
+                      const isPenalty = evt.type === "penalty";
+                      const color = isGoal ? C.accent : isCard ? (evt.type === "red" ? C.red : "#f59e0b") : isPenalty ? "#8b5cf6" : C.dim + "44";
+                      const h = isGoal ? 32 : isCard ? 22 : isPenalty ? 28 : 12;
+                      return (
+                        <div key={evt.id} title={`${evt.minute}' ${evt.type} ${evt.player || ""}`} style={{
+                          position: "absolute", left, bottom: 0,
+                          width: isGoal ? 4 : 3, height: h,
+                          background: color, borderRadius: "2px 2px 0 0",
+                          transition: "all .3s",
+                          cursor: "pointer",
+                        }} />
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.dim, marginTop: 4 }}>
+                    <span>0'</span>
+                    <span>45'</span>
+                    <span>90'</span>
+                    {currentMinute > 90 && <span>{currentMinute}'</span>}
+                  </div>
+                  <div style={{ display: "flex", gap: 12, marginTop: 8, fontSize: 10, color: C.dim, flexWrap: "wrap" }}>
+                    <span><span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 1, background: C.accent, marginRight: 3, verticalAlign: "middle" }} />Goal</span>
+                    <span><span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 1, background: "#f59e0b", marginRight: 3, verticalAlign: "middle" }} />Yellow</span>
+                    <span><span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 1, background: C.red, marginRight: 3, verticalAlign: "middle" }} />Red</span>
+                    <span><span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 1, background: "#8b5cf6", marginRight: 3, verticalAlign: "middle" }} />Penalty</span>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         )}
