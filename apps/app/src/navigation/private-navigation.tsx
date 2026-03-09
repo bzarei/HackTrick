@@ -110,51 +110,66 @@ export class Navigation extends React.Component<
     const localeManager = this.context.get(LocaleManager);
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'Arial, sans-serif' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: "'TeleNeoWeb','Segoe UI','Helvetica Neue',Arial,sans-serif" }}>
         {/* HEADER */}
         <header
           style={{
-            height: '60px',
+            height: '56px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '0 16px',
-            background: '#1e1e2f',
-            color: '#fff',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            padding: '0 20px',
+            background: '#ffffff',
+            color: '#191919',
+            borderBottom: '1px solid #e6e6e6',
             flexShrink: 0,
           }}
         >
-          <button
-            onClick={this.toggleSidebar}
-            style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer' }}
-          >
-            ☰
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button
+              onClick={this.toggleSidebar}
+              style={{ background: 'transparent', border: 'none', color: '#191919', fontSize: '20px', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#f2f2f2')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              ☰
+            </button>
 
-          <div style={{ fontWeight: 'bold', fontSize: '18px' }}>My App</div>
+            {/* Telekom T-Logo + Brand */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: 6,
+                background: '#e20074', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', fontWeight: 900, fontSize: 16,
+              }}>T</div>
+              <span style={{ fontWeight: 800, fontSize: '16px', color: '#191919', letterSpacing: '-0.3px' }}>
+                Matchday
+              </span>
+            </div>
+          </div>
 
           {/* RIGHT CONTROLS */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {/* Modules Button */}
             <button
               onClick={this.toggleModulesModal}
               style={{
-                padding: '8px 16px',
-                backgroundColor: '#4a5568',
-                color: '#fff',
-                border: '1px solid #2d3748',
-                borderRadius: '6px',
+                padding: '6px 14px',
+                backgroundColor: '#f2f2f2',
+                color: '#191919',
+                border: '1px solid #e6e6e6',
+                borderRadius: '8px',
                 cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
+                fontSize: '13px',
+                fontWeight: '600',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.2s ease',
+                gap: '6px',
+                transition: 'all 0.15s ease',
+                fontFamily: 'inherit',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#5a6578')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#4a5568')}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e6e6e6')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f2f2f2')}
             >
               <span>📦</span>
               <span>
@@ -166,48 +181,49 @@ export class Navigation extends React.Component<
             <button
               onClick={this.handleLoginLogout}
               style={{
-                padding: '8px 16px',
-                backgroundColor: hasSession ? '#d32f2f' : '#1976d2',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '6px',
+                padding: '6px 16px',
+                backgroundColor: hasSession ? '#ffffff' : '#e20074',
+                color: hasSession ? '#d90000' : '#ffffff',
+                border: hasSession ? '1.5px solid #d90000' : 'none',
+                borderRadius: '8px',
                 cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                transition: 'all 0.2s ease',
+                fontSize: '13px',
+                fontWeight: '700',
+                transition: 'all 0.15s ease',
+                fontFamily: 'inherit',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = hasSession ? '#f44336' : '#1565c0';
+                e.currentTarget.style.opacity = '0.85';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = hasSession ? '#d32f2f' : '#1976d2';
+                e.currentTarget.style.opacity = '1';
               }}
             >
               {hasSession ? 'Logout' : 'Login'}
             </button>
 
             {/* User Avatar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 4px' }}>
               <div
                 style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '34px',
+                  height: '34px',
                   borderRadius: '50%',
-                  background: hasSession ? '#4a5568' : '#666',
+                  background: hasSession ? '#e20074' : '#e6e6e6',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#fff',
+                  color: hasSession ? '#fff' : '#999',
                   fontWeight: 'bold',
-                  fontSize: '16px',
+                  fontSize: '14px',
                 }}
               >
                 {hasSession && user ? user.name?.charAt(0).toUpperCase() : '?'}
               </div>
               {hasSession && user && (
                 <div style={{ fontSize: '12px', lineHeight: 1.2 }}>
-                  <div style={{ fontWeight: '600' }}>{user.name}</div>
-                  <div style={{ color: '#aaa', fontSize: '11px' }}>{user.email}</div>
+                  <div style={{ fontWeight: '600', color: '#191919' }}>{user.name}</div>
+                  <div style={{ color: '#999', fontSize: '11px' }}>{user.email}</div>
                 </div>
               )}
             </div>
@@ -226,7 +242,7 @@ export class Navigation extends React.Component<
             <NavigationList collapsed={sidebarCollapsed} />
           </ResizableSidebar>
 
-          <main style={{ flex: 1, background: '#f4f4f4', overflowY: 'auto' }}>
+          <main style={{ flex: 1, background: '#fafafa', overflowY: 'auto' }}>
             <ReactiveOutlet />
           </main>
         </div>

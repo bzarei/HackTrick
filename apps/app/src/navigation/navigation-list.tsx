@@ -75,12 +75,28 @@ export const NavigationList: React.FC<NavigationListProps> = ({
               alignItems: 'center',
               gap: 12,
               padding: '12px 16px',
-              color: '#fff',
+              color: isActive ? '#e20074' : '#191919',
               textDecoration: 'none',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
-              background: isActive ? '#444' : 'transparent',
-              transition: 'background 0.15s ease',
+              background: isActive ? 'rgba(226,0,116,0.08)' : 'transparent',
+              borderLeft: isActive ? '3px solid #e20074' : '3px solid transparent',
+              fontWeight: isActive ? 700 : 400,
+              fontSize: 14,
+              fontFamily: "'TeleNeoWeb','Segoe UI','Helvetica Neue',Arial,sans-serif",
+              transition: 'background 0.15s ease, color 0.15s ease, border-color 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              if (!isActive) {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(226,0,116,0.04)';
+                (e.currentTarget as HTMLElement).style.color = '#e20074';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive) {
+                (e.currentTarget as HTMLElement).style.background = 'transparent';
+                (e.currentTarget as HTMLElement).style.color = '#191919';
+              }
             }}
           >
             {/* Icon                  style={{ flexShrink: 0 }} */}

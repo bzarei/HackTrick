@@ -70,13 +70,14 @@ export const ResizableSidebar: React.FC<ResizableSidebarProps> = ({
         position: 'relative',
         width: effectiveWidth,
         minWidth: effectiveWidth,
-        background: '#2c2c3e',
-        color: '#fff',
+        background: '#ffffff',
+        color: '#191919',
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
         overflowY: 'auto',
         overflowX: 'hidden',
+        borderRight: '1px solid #e6e6e6',
         transition: isDragging.current ? 'none' : 'width 0.2s',
       }}
     >
@@ -105,15 +106,15 @@ export const ResizableSidebar: React.FC<ResizableSidebarProps> = ({
               width: 2,
               height: 40,
               borderRadius: 2,
-              background: 'rgba(255,255,255,0.2)',
+              background: 'rgba(226,0,116,0.15)',
               transition: 'background 0.15s, height 0.15s',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.5)';
+              e.currentTarget.style.background = 'rgba(226,0,116,0.4)';
               e.currentTarget.style.height = '60px';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.2)';
+              e.currentTarget.style.background = 'rgba(226,0,116,0.15)';
               e.currentTarget.style.height = '40px';
             }}
           />
