@@ -667,17 +667,46 @@ function generateMatchSummary(events: MatchEvent[], homeTeam: TeamInfo, awayTeam
 
 // ── Google Gemini AI Summary Generator ──────────────────────────────────────
 
-const GEMINI_API_KEY = "AIzaSyAvZwA50YfuDbgX_3ZNfjOswyXJYcCETdw";
-const GEMINI_MODEL = "gemini-2.0-flash";
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+// API key is stored in localStorage at runtime – never hardcode it in source!
+function getGeminiApiKey(): string {
+  return localStorage.getItem("GEMINI_API_KEY") || "";
+}
+function setGeminiApiKey(key: string) {
+  localStorage.setItem("GEMINI_API_KEY", key.trim());
+}
+// Ordered list of models to try – if one is rate-limited we fall back to the next
+const GEMINI_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash"];
+const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
+const MAX_RETRIES = 2; // per model
+
+/** Helper: sleep for `ms` milliseconds */
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+/** Extract retry-after seconds from a 429 error body (defaults to 30s) */
+function parseRetryDelay(body: string): number {
+  try {
+    const json = JSON.parse(body);
+    const retryInfo = json?.error?.details?.find((d: any) => d["@type"]?.includes("RetryInfo"));
+    if (retryInfo?.retryDelay) {
+      const secs = parseInt(retryInfo.retryDelay, 10);
+      if (secs > 0) return secs;
+    }
+  } catch { /* ignore parse errors */ }
+  return 30; // safe default
+}
+
+// Optional progress callback so the UI can show a countdown
+type ProgressCallback = (msg: string) => void;
 
 async function generateGeminiSummary(
   events: MatchEvent[],
   homeTeam: TeamInfo,
   awayTeam: TeamInfo,
-  stats: MatchStats
+  stats: MatchStats,
+  onProgress?: ProgressCallback,
 ): Promise<string> {
-  if (!GEMINI_API_KEY) {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) {
     throw new Error("Gemini API key not configured. Get one free at https://aistudio.google.com/apikey");
   }
 
@@ -717,30 +746,62 @@ Requirements:
 - Use emojis sparingly for section headers (⚽, 📊, 🏆, 🧠)
 - Format with clear paragraphs`;
 
-  const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.8,
-        maxOutputTokens: 512,
-        topP: 0.95,
-      },
-    }),
+  const body = JSON.stringify({
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.8, maxOutputTokens: 512, topP: 0.95 },
   });
 
-  console.log("[Gemini] Response status:", response.status);
+  // Try each model; within each model retry on 429
+  for (const model of GEMINI_MODELS) {
+    const url = `${GEMINI_BASE}/${model}:generateContent?key=${apiKey}`;
 
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Gemini API error (${response.status}): ${err}`);
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      onProgress?.(`Trying ${model}${attempt > 0 ? ` (retry ${attempt}/${MAX_RETRIES})` : ""}…`);
+      console.log(`[Gemini] ${model} attempt ${attempt}`);
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+
+      console.log("[Gemini] Response status:", response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error("No text returned from Gemini API");
+        return text;
+      }
+
+      const errText = await response.text();
+
+      // 429 = rate limited → wait & retry (or fall back to next model)
+      if (response.status === 429) {
+        const delaySecs = parseRetryDelay(errText);
+
+        if (attempt < MAX_RETRIES) {
+          // Countdown in the UI
+          for (let s = delaySecs; s > 0; s--) {
+            onProgress?.(`⏳ Rate limited – retrying ${model} in ${s}s…`);
+            await sleep(1000);
+          }
+          continue; // retry same model
+        }
+        // Out of retries for this model → try next model
+        console.warn(`[Gemini] ${model} exhausted retries, trying next model…`);
+        break;
+      }
+
+      // Any other HTTP error is fatal
+      throw new Error(`Gemini API error (${response.status}): ${errText}`);
+    }
   }
 
-  const data = await response.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("No text returned from Gemini API");
-  return text;
+  throw new Error(
+    "All Gemini models are rate-limited right now. Please wait a minute and try again, " +
+    "or check your quota at https://ai.google.dev/gemini-api/docs/rate-limits"
+  );
 }
 
 function EventIcon({ type }: { type: MatchEvent["type"] }) {
@@ -850,7 +911,9 @@ function MatchdayCompanion({ onBack }: { onBack: () => void }) {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [aiProgress, setAiProgress] = useState<string | null>(null);
   const geminiTriggeredRef = useRef(false);
+  const [geminiKey, setGeminiKey] = useState(() => getGeminiApiKey());
 
   const homeScore = events.filter(e => e.type === "goal" && e.team === "home").length;
   const awayScore = events.filter(e => e.type === "goal" && e.team === "away").length;
@@ -933,12 +996,13 @@ function MatchdayCompanion({ onBack }: { onBack: () => void }) {
   const summary = useMemo(() => generateMatchSummary(events, HOME_TEAM, AWAY_TEAM, interpStats), [events, interpStats]);
 
   const requestGeminiSummary = useCallback(async () => {
-    console.log("[Gemini] requestGeminiSummary called, events:", events.length, "apiKey:", !!GEMINI_API_KEY);
+    console.log("[Gemini] requestGeminiSummary called, events:", events.length, "apiKey:", !!getGeminiApiKey());
     if (events.length === 0) return;
     setAiLoading(true);
     setAiError(null);
+    setAiProgress(null);
     try {
-      const result = await generateGeminiSummary(events, HOME_TEAM, AWAY_TEAM, interpStats);
+      const result = await generateGeminiSummary(events, HOME_TEAM, AWAY_TEAM, interpStats, (msg) => setAiProgress(msg));
       console.log("[Gemini] Success, got result:", result?.substring(0, 100));
       setAiSummary(result);
     } catch (e: any) {
@@ -946,12 +1010,13 @@ function MatchdayCompanion({ onBack }: { onBack: () => void }) {
       setAiError(e.message || "Failed to generate AI summary");
     } finally {
       setAiLoading(false);
+      setAiProgress(null);
     }
   }, [events, interpStats]);
 
   // Auto-trigger Gemini when switching to summary tab with events
   useEffect(() => {
-    if (tab === "summary" && events.length > 0 && !geminiTriggeredRef.current && GEMINI_API_KEY) {
+    if (tab === "summary" && events.length > 0 && !geminiTriggeredRef.current && geminiKey) {
       console.log("[Gemini] Auto-triggering summary generation");
       geminiTriggeredRef.current = true;
       requestGeminiSummary();
@@ -1270,22 +1335,50 @@ function MatchdayCompanion({ onBack }: { onBack: () => void }) {
                 }}>Powered by Google Gemini</span>
               </div>
 
-              {!GEMINI_API_KEY ? (
+              {!geminiKey ? (
                 <div style={{
                   textAlign: "center", padding: 24, color: MD_COLORS.dim,
                   background: MD_COLORS.surface, borderRadius: 10,
                 }}>
                   <div style={{ fontSize: 32, marginBottom: 8 }}>🔑</div>
-                  <div style={{ fontSize: 13, marginBottom: 8 }}>
-                    Gemini API Key not configured.
+                  <div style={{ fontSize: 13, marginBottom: 12 }}>
+                    Enter your Gemini API Key to enable AI summaries.
                   </div>
-                  <div style={{ fontSize: 12 }}>
+                  <div style={{ fontSize: 12, marginBottom: 12 }}>
                     Get a free key at{" "}
                     <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer"
                       style={{ color: "#4285f4", textDecoration: "underline" }}>
                       aistudio.google.com/apikey
                     </a>
-                    {" "}and set it in <code style={{ background: MD_COLORS.surface, padding: "2px 6px", borderRadius: 4 }}>GEMINI_API_KEY</code>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
+                    <input
+                      id="gemini-key-input"
+                      type="password"
+                      placeholder="Paste your Gemini API key here…"
+                      style={{
+                        padding: "8px 12px", borderRadius: 8, border: `1px solid ${MD_COLORS.cardBorder}`,
+                        background: MD_COLORS.card, color: MD_COLORS.white, fontSize: 13,
+                        fontFamily: "inherit", width: 280, outline: "none",
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const val = (e.target as HTMLInputElement).value.trim();
+                          if (val) { setGeminiApiKey(val); setGeminiKey(val); }
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        const input = document.getElementById("gemini-key-input") as HTMLInputElement | null;
+                        const val = input?.value.trim();
+                        if (val) { setGeminiApiKey(val); setGeminiKey(val); }
+                      }}
+                      style={{
+                        padding: "8px 16px", borderRadius: 8, border: "none",
+                        background: "#4285f4", color: "#fff", cursor: "pointer",
+                        fontSize: 13, fontWeight: 600, fontFamily: "inherit",
+                      }}>Save Key</button>
                   </div>
                 </div>
               ) : events.length === 0 ? (
@@ -1333,7 +1426,7 @@ function MatchdayCompanion({ onBack }: { onBack: () => void }) {
                       opacity: aiLoading ? 0.7 : 1,
                     }}>
                     {aiLoading ? (
-                      <span>⏳ Generating with Gemini...</span>
+                      <span>{aiProgress || "⏳ Generating with Gemini..."}</span>
                     ) : (
                       <span>✨ Generate AI Summary with Gemini</span>
                     )}

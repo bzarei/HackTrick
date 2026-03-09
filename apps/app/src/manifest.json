@@ -82,6 +82,25 @@
       "tags": [
         "menu"
       ],
+      "permissions": ["follow-game"],
+      "features": [],
+      "visibility": [
+        "private",
+        "public"
+      ],
+      "children": []
+    },
+    {
+      "id": "matchday-Companion",
+      "label": "Matchday Companion",
+      "path": "/matchday-Companion",
+      "component": "MatchdayCompanionPage",
+      "sourceFile": "apps/app/src/feature/matchday-Companion.tsx",
+      "icon": "soccer",
+      "description": "soccer",
+      "tags": [
+        "menu"
+      ],
       "permissions": [],
       "features": [],
       "visibility": [
