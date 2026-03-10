@@ -67,22 +67,32 @@ interface StandingsRow {
   points: number;
 }
 
-// ── Theme (Telekom magenta & white) ─────────────────────────────────────────
+// ── Theme — Telekom Lovable Design ──────────────────────────────────────────
 
 const C = {
-  bg: "#ffffff",
-  card: "#fff0f6",
-  cardBorder: "rgba(226,0,116,0.15)",
-  primary: "#e20074",
-  primaryDark: "#b0005c",
-  accent: "#ff3399",
-  gold: "#e20074",
-  red: "#ef4444",
-  text: "#1a1a1a",
-  dim: "#777777",
-  surface: "rgba(226,0,116,0.04)",
-  scoreBg: "#fff5f9",
+  bg:           "#ffffff",
+  bgSecondary:  "#f9f9f9",
+  card:         "#ffffff",
+  cardBorder:   "#e6e6e6",
+  primary:      "#e20074",
+  primaryDark:  "#b0005c",
+  accent:       "#ff3399",
+  gold:         "#e20074",
+  red:          "#d90000",
+  text:         "#191919",
+  textSecondary:"#6c6c6c",
+  dim:          "#999999",
+  surface:      "#f2f2f2",
+  scoreBg:      "#fafafa",
+  magenta10:    "rgba(226,0,116,0.10)",
+  magenta06:    "rgba(226,0,116,0.06)",
+  magenta15:    "rgba(226,0,116,0.15)",
 };
+
+/** Telekom ODS type scale */
+const ODS_FONT   = "'TeleNeoWeb', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
+const ODS_RADIUS = { sm: 4, md: 8, lg: 16 };
+const ODS_SPACE  = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 };
 
 // ── CSS Keyframes ───────────────────────────────────────────────────────────
 
@@ -813,85 +823,102 @@ function StatBar({
         ? (v: number) => v + "%"
         : (v: number) => String(v);
 
+  const homeDominant = homeVal > awayVal;
+  const awayDominant = awayVal > homeVal;
+
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div style={{ marginBottom: 20 }}>
+      {/* Label row — centered, tappable for explanation */}
       <div
         style={{
+          textAlign: "center",
+          marginBottom: 8,
           display: "flex",
-          justifyContent: "space-between",
-          fontSize: 13,
-          marginBottom: 4,
-          color: C.text,
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
+          minHeight: 28,
+          cursor: explanation ? "pointer" : "default",
+          WebkitTapHighlightColor: "transparent",
         }}
+        onClick={() => explanation && setShowExplain(!showExplain)}
       >
-        <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{fmt(homeVal)}</span>
-        <span
-          style={{
-            color: C.dim,
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            cursor: explanation ? "pointer" : "default",
-          }}
-          onClick={() => explanation && setShowExplain(!showExplain)}
-        >
-          {label}{" "}
-          {explanation && (
-            <span
-              style={{
-                fontSize: 11,
-                background: C.primary + "33",
-                borderRadius: 4,
-                padding: "1px 5px",
-                color: C.primary,
-              }}
-            >
-              ?
-            </span>
-          )}
+        <span style={{
+          fontSize: 12, fontWeight: 600, color: C.textSecondary,
+          textTransform: "uppercase", letterSpacing: 0.5,
+          fontFamily: ODS_FONT,
+        }}>
+          {label}
         </span>
-        <span style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{fmt(awayVal)}</span>
+        {explanation && (
+          <span style={{
+            width: 20, height: 20, borderRadius: "50%",
+            background: C.magenta10, color: C.primary,
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            fontSize: 11, fontWeight: 700,
+          }}>
+            ?
+          </span>
+        )}
       </div>
-      <div
-        style={{
-          display: "flex",
-          height: 6,
-          borderRadius: 3,
-          overflow: "hidden",
-          background: C.surface,
-        }}
-      >
-        <div
-          style={{
+
+      {/* Values + bar */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 10,
+      }}>
+        {/* Home value */}
+        <span style={{
+          minWidth: 44, textAlign: "right",
+          fontSize: 16, fontWeight: 800, fontVariantNumeric: "tabular-nums",
+          color: homeDominant ? HOME_TEAM.color : C.text,
+          fontFamily: ODS_FONT,
+        }}>
+          {fmt(homeVal)}
+        </span>
+
+        {/* Bar */}
+        <div style={{
+          flex: 1, display: "flex", height: 10, borderRadius: 5,
+          overflow: "hidden", background: C.surface,
+        }}>
+          <div style={{
             width: `${homePct}%`,
-            background: `linear-gradient(90deg, ${HOME_TEAM.color}, ${HOME_TEAM.color}cc)`,
+            background: homeDominant
+              ? `linear-gradient(90deg, ${HOME_TEAM.color}, ${HOME_TEAM.color}dd)`
+              : `${HOME_TEAM.color}88`,
             transition: "width 0.8s ease",
-            borderRadius: "3px 0 0 3px",
-          }}
-        />
-        <div
-          style={{
+            borderRadius: "5px 0 0 5px",
+          }} />
+          <div style={{
             width: `${100 - homePct}%`,
-            background: `linear-gradient(90deg, ${AWAY_TEAM.color}cc, ${AWAY_TEAM.color})`,
+            background: awayDominant
+              ? `linear-gradient(90deg, ${AWAY_TEAM.color}dd, ${AWAY_TEAM.color})`
+              : `${AWAY_TEAM.color}88`,
             transition: "width 0.8s ease",
-            borderRadius: "0 3px 3px 0",
-          }}
-        />
+            borderRadius: "0 5px 5px 0",
+          }} />
+        </div>
+
+        {/* Away value */}
+        <span style={{
+          minWidth: 44, textAlign: "left",
+          fontSize: 16, fontWeight: 800, fontVariantNumeric: "tabular-nums",
+          color: awayDominant ? AWAY_TEAM.color : C.text,
+          fontFamily: ODS_FONT,
+        }}>
+          {fmt(awayVal)}
+        </span>
       </div>
+
+      {/* Explanation overlay */}
       {showExplain && explanation && (
-        <div
-          style={{
-            marginTop: 8,
-            padding: "10px 14px",
-            borderRadius: 8,
-            background: C.primary + "11",
-            border: `1px solid ${C.primary}33`,
-            fontSize: 12,
-            color: C.dim,
-            lineHeight: 1.6,
-            animation: "mc-fadeIn .3s ease-out",
-          }}
-        >
+        <div style={{
+          marginTop: 10, padding: "12px 16px", borderRadius: 10,
+          background: C.magenta06, border: `1px solid ${C.magenta15}`,
+          fontSize: 13, color: C.textSecondary, lineHeight: 1.7,
+          animation: "mc-fadeIn .3s ease-out",
+          fontFamily: ODS_FONT,
+        }}>
           💡 {explanation}
         </div>
       )}
@@ -1202,337 +1229,241 @@ function MatchdayCompanion() {
   // ════════════════════════════════════════════════════════════════════════════
   // RENDER
   // ════════════════════════════════════════════════════════════════════════════
+  const F = ODS_FONT;
+  const mobileBtn: React.CSSProperties = {
+    padding: "10px 16px", borderRadius: ODS_RADIUS.md, border: "none",
+    fontWeight: 700, fontSize: 13, fontFamily: F, cursor: "pointer",
+    WebkitTapHighlightColor: "transparent", minHeight: 44, // iOS touch target
+    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+  };
+
   return (
     <div
       style={{
-        minHeight: "100vh",
-        background: C.bg,
-        color: C.text,
-        fontFamily: "'Segoe UI','Helvetica Neue',Arial,sans-serif",
-        display: "flex",
-        flexDirection: "column",
+        minHeight: "100vh", maxWidth: 480, margin: "0 auto", width: "100%",
+        background: C.bg, color: C.text, fontFamily: F,
+        display: "flex", flexDirection: "column",
+        // safe-area for iPhone notch
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
       <style>{KEYFRAMES}</style>
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          background: `linear-gradient(90deg, ${C.primary}, ${C.primaryDark})`,
-          padding: "10px 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <span style={{ fontSize: 16, fontWeight: 800, color: "#fff" }}>⚽ Matchday Companion</span>
+      {/* ── App Header (compact mobile) ────────────────────────────────────── */}
+      <div style={{
+        background: C.primary, padding: "10px 16px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <span style={{ fontSize: 15, fontWeight: 800, color: "#fff", fontFamily: F }}>⚽ Matchday</span>
         {isSimulating && (
-          <span style={{ fontSize: 12, color: "#fff", display: "flex", alignItems: "center", gap: 4 }}>
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: "#ff5252",
-                animation: "mc-pulse 1s infinite",
-              }}
-            />
+          <span style={{
+            fontSize: 11, color: "#fff", display: "flex", alignItems: "center", gap: 4,
+            background: "rgba(255,255,255,0.15)", borderRadius: 12, padding: "3px 10px",
+          }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: "50%", background: "#ff5252",
+              animation: "mc-pulse 1s infinite",
+            }} />
             LIVE {currentMinute}'
           </span>
         )}
       </div>
 
-      {/* ── Scoreboard ─────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          background: C.scoreBg,
-          padding: "20px 16px",
-          borderBottom: `1px solid ${C.cardBorder}`,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 600,
-            margin: "0 auto",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 24,
-          }}
-        >
-          {/* Home */}
+      {/* ── Scoreboard (mobile-optimized) ──────────────────────────────────── */}
+      <div style={{
+        background: C.bgSecondary, padding: "16px 12px 12px",
+        borderBottom: `1px solid ${C.cardBorder}`,
+      }}>
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+        }}>
+          {/* Home team */}
           <div
-            style={{ textAlign: "center", flex: 1, cursor: "pointer", opacity: favoriteTeam === "home" ? 1 : 0.8 }}
+            style={{
+              textAlign: "center", flex: 1, cursor: "pointer",
+              opacity: favoriteTeam === "home" ? 1 : 0.75,
+              WebkitTapHighlightColor: "transparent",
+            }}
             onClick={() => setFavoriteTeam(favoriteTeam === "home" ? null : "home")}
           >
-            <div style={{ fontSize: 40 }}>{HOME_TEAM.flag}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4 }}>{HOME_TEAM.name}</div>
-            {favoriteTeam === "home" && <span style={{ fontSize: 10, color: C.gold }}>⭐ Following</span>}
+            <div style={{ fontSize: 32 }}>{HOME_TEAM.flag}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, marginTop: 2, fontFamily: F }}>{HOME_TEAM.shortName}</div>
+            {favoriteTeam === "home" && <div style={{ fontSize: 9, color: C.primary, marginTop: 1 }}>⭐</div>}
           </div>
 
           {/* Score */}
-          <div
-            style={{
-              background: C.card,
-              borderRadius: 14,
-              padding: "12px 28px",
-              border: `1px solid ${C.cardBorder}`,
-              textAlign: "center",
-              minWidth: 120,
-            }}
-          >
-            <div style={{ fontSize: 36, fontWeight: 900, fontVariantNumeric: "tabular-nums", letterSpacing: 2 }}>
-              {homeScore} <span style={{ color: C.dim, fontSize: 24 }}>–</span> {awayScore}
+          <div style={{
+            background: C.card, borderRadius: 12, padding: "8px 20px",
+            border: `1px solid ${C.cardBorder}`, textAlign: "center", minWidth: 100,
+          }}>
+            <div style={{ fontSize: 32, fontWeight: 900, fontVariantNumeric: "tabular-nums", letterSpacing: 2, fontFamily: F }}>
+              {homeScore} <span style={{ color: C.dim, fontSize: 20 }}>–</span> {awayScore}
             </div>
-            <div
-              style={{
-                fontSize: 11,
-                color: isSimulating ? C.red : C.dim,
-                fontWeight: 600,
-                marginTop: 2,
-              }}
-            >
-              {events.length === 0
-                ? "PRE-MATCH"
-                : isSimulating
-                  ? `${currentMinute}' LIVE`
-                  : events.length >= FULL_EVENTS.length
-                    ? "FULL TIME (AET)"
-                    : `${currentMinute}'`}
+            <div style={{
+              fontSize: 10, fontWeight: 700, marginTop: 1,
+              color: isSimulating ? C.red : C.textSecondary,
+            }}>
+              {events.length === 0 ? "PRE-MATCH"
+                : isSimulating ? `${currentMinute}' LIVE`
+                : events.length >= FULL_EVENTS.length ? "FT (AET)" : `${currentMinute}'`}
             </div>
           </div>
 
-          {/* Away */}
+          {/* Away team */}
           <div
-            style={{ textAlign: "center", flex: 1, cursor: "pointer", opacity: favoriteTeam === "away" ? 1 : 0.8 }}
+            style={{
+              textAlign: "center", flex: 1, cursor: "pointer",
+              opacity: favoriteTeam === "away" ? 1 : 0.75,
+              WebkitTapHighlightColor: "transparent",
+            }}
             onClick={() => setFavoriteTeam(favoriteTeam === "away" ? null : "away")}
           >
-            <div style={{ fontSize: 40 }}>{AWAY_TEAM.flag}</div>
-            <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4 }}>{AWAY_TEAM.name}</div>
-            {favoriteTeam === "away" && <span style={{ fontSize: 10, color: C.gold }}>⭐ Following</span>}
+            <div style={{ fontSize: 32 }}>{AWAY_TEAM.flag}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, marginTop: 2, fontFamily: F }}>{AWAY_TEAM.shortName}</div>
+            {favoriteTeam === "away" && <div style={{ fontSize: 9, color: C.primary, marginTop: 1 }}>⭐</div>}
           </div>
         </div>
 
         {/* Progress bar */}
-        <div
-          style={{
-            maxWidth: 600,
-            margin: "12px auto 0",
-            height: 3,
-            borderRadius: 2,
-            background: C.surface,
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              width: `${progress}%`,
-              height: "100%",
-              background: `linear-gradient(90deg, ${C.primary}, ${C.accent})`,
-              transition: "width .5s ease",
-              borderRadius: 2,
-            }}
-          />
+        <div style={{ height: 3, borderRadius: 2, background: C.surface, overflow: "hidden", marginTop: 10 }}>
+          <div style={{
+            width: `${progress}%`, height: "100%", borderRadius: 2,
+            background: `linear-gradient(90deg, ${C.primary}, ${C.accent})`,
+            transition: "width .5s ease",
+          }} />
         </div>
 
-        {/* Simulation controls */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+        {/* Sim controls — horizontal scroll on small screens */}
+        <div style={{
+          display: "flex", justifyContent: "center", gap: 6, marginTop: 10,
+          overflowX: "auto", WebkitOverflowScrolling: "touch", paddingBottom: 2,
+        }}>
           {!isSimulating ? (
-            <button
-              onClick={startSimulation}
-              disabled={events.length >= FULL_EVENTS.length}
+            <button onClick={startSimulation} disabled={events.length >= FULL_EVENTS.length}
               style={{
-                padding: "6px 18px",
-                borderRadius: 8,
-                border: "none",
-                fontWeight: 700,
-                background:
-                  events.length >= FULL_EVENTS.length
-                    ? C.surface
-                    : `linear-gradient(135deg, ${C.primary}, ${C.primaryDark})`,
+                ...mobileBtn,
+                background: events.length >= FULL_EVENTS.length ? C.surface : C.primary,
                 color: events.length >= FULL_EVENTS.length ? C.dim : "#fff",
-                cursor: events.length >= FULL_EVENTS.length ? "not-allowed" : "pointer",
-                fontSize: 12,
-                fontFamily: "inherit",
                 opacity: events.length >= FULL_EVENTS.length ? 0.4 : 1,
-              }}
-            >
-              ▶ {events.length === 0 ? "Start Simulation" : "Resume"}
+              }}>
+              ▶ {events.length === 0 ? "Start" : "Resume"}
             </button>
           ) : (
-            <button
-              onClick={stopSimulation}
-              style={{
-                padding: "6px 18px",
-                borderRadius: 8,
-                border: `1px solid ${C.primary}44`,
-                background: "transparent",
-                color: C.primary,
-                cursor: "pointer",
-                fontSize: 12,
-                fontFamily: "inherit",
-                fontWeight: 700,
-              }}
-            >
+            <button onClick={stopSimulation}
+              style={{ ...mobileBtn, background: "transparent", color: C.primary, border: `1.5px solid ${C.primary}` }}>
               ⏸ Pause
             </button>
           )}
-          <button
-            onClick={loadAll}
-            style={{
-              padding: "6px 14px",
-              borderRadius: 8,
-              border: `1px solid ${C.cardBorder}`,
-              background: "transparent",
-              color: C.dim,
-              cursor: "pointer",
-              fontSize: 12,
-              fontFamily: "inherit",
-            }}
-          >
-            ⏩ Load All
+          <button onClick={loadAll}
+            style={{ ...mobileBtn, background: "transparent", color: C.textSecondary, border: `1px solid ${C.cardBorder}` }}>
+            ⏩ All
           </button>
-          <button
-            onClick={resetSimulation}
-            style={{
-              padding: "6px 14px",
-              borderRadius: 8,
-              border: `1px solid ${C.cardBorder}`,
-              background: "transparent",
-              color: C.dim,
-              cursor: "pointer",
-              fontSize: 12,
-              fontFamily: "inherit",
-            }}
-          >
-            ↺ Reset
+          <button onClick={resetSimulation}
+            style={{ ...mobileBtn, background: "transparent", color: C.textSecondary, border: `1px solid ${C.cardBorder}` }}>
+            ↺
           </button>
-          <select
-            value={simSpeed}
-            onChange={(e) => setSimSpeed(Number(e.target.value))}
+          <select value={simSpeed} onChange={(e) => setSimSpeed(Number(e.target.value))}
             style={{
-              padding: "6px 10px",
-              borderRadius: 8,
-              border: `1px solid ${C.cardBorder}`,
-              background: C.card,
-              color: C.dim,
-              fontSize: 12,
-              fontFamily: "inherit",
-              cursor: "pointer",
-            }}
-          >
+              ...mobileBtn, background: C.card, color: C.textSecondary,
+              border: `1px solid ${C.cardBorder}`, padding: "8px 10px",
+            }}>
             <option value={400}>Fast</option>
             <option value={800}>Normal</option>
             <option value={1500}>Slow</option>
-            <option value={3000}>Realistic</option>
+            <option value={3000}>Real</option>
           </select>
         </div>
       </div>
 
-      {/* ── Tab Navigation ─────────────────────────────────────────────────── */}
-      <div
-        style={{
-          display: "flex",
-          borderBottom: `1px solid ${C.cardBorder}`,
-          background: C.bg,
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-        }}
-      >
-        {tabBtn("live", "Live", "📡")}
-        {tabBtn("stats", "Stats", "📊")}
-        {tabBtn("table", "Table", "📋")}
-        {tabBtn("summary", "Summary", "🤖")}
-        {tabBtn("pulse", "Pulse", "💓")}
+      {/* ── Tab Navigation (native app style bottom tabs) ──────────────────── */}
+      <div style={{
+        display: "flex", borderBottom: `1px solid ${C.cardBorder}`,
+        background: C.bg, position: "sticky", top: 0, zIndex: 10,
+      }}>
+        {(["live", "stats", "table", "summary", "pulse"] as MatchdayTab[]).map((t) => {
+          const icons: Record<MatchdayTab, string> = { live: "📡", stats: "📊", table: "📋", summary: "🤖", pulse: "💓" };
+          const labels: Record<MatchdayTab, string> = { live: "Live", stats: "Stats", table: "Table", summary: "AI", pulse: "Pulse" };
+          return (
+            <button key={t} onClick={() => setTab(t)} style={{
+              flex: 1, padding: "8px 2px", border: "none",
+              borderBottom: tab === t ? `2.5px solid ${C.primary}` : "2.5px solid transparent",
+              background: tab === t ? C.magenta06 : "transparent",
+              color: tab === t ? C.primary : C.dim,
+              cursor: "pointer", fontSize: 10, fontWeight: tab === t ? 800 : 500,
+              fontFamily: F, transition: "all .15s",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 1,
+              WebkitTapHighlightColor: "transparent", minHeight: 44,
+              justifyContent: "center",
+            }}>
+              <span style={{ fontSize: 16 }}>{icons[t]}</span>
+              <span>{labels[t]}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Tab Content ────────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, overflow: "auto", padding: 16 }}>
-        {/* ────────────── LIVE TAB ────────────── */}
+      <div style={{ flex: 1, overflow: "auto", padding: "12px 12px", WebkitOverflowScrolling: "touch" }}>
+        {/* ────────────── LIVE TAB (Mobile) ────────────── */}
         {tab === "live" && (
-          <div style={{ maxWidth: 650, margin: "0 auto" }}>
+          <div style={{ width: "100%" }}>
             {events.length === 0 ? (
-              <div style={{ textAlign: "center", padding: 40, color: C.dim }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>⚽</div>
-                <p style={{ fontSize: 15 }}>Press "Start Simulation" to begin the live match experience!</p>
-                <p style={{ fontSize: 12, color: C.dim }}>Watch events unfold in real-time as the match progresses.</p>
+              <div style={{ textAlign: "center", padding: "48px 20px", color: C.textSecondary }}>
+                <div style={{ fontSize: 44, marginBottom: 12 }}>⚽</div>
+                <p style={{ fontSize: 15, fontWeight: 600, fontFamily: F }}>Tap "Start" to begin!</p>
+                <p style={{ fontSize: 13 }}>Events will appear in real-time.</p>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {events.map((evt, i) => {
                   const isGoal = evt.type === "goal";
                   const isSpecial = ["half-time", "full-time", "kickoff"].includes(evt.type);
                   const isNew = i === events.length - 1 && isSimulating;
-                  const teamColor =
-                    evt.team === "home" ? HOME_TEAM.color : evt.team === "away" ? AWAY_TEAM.color : C.dim;
+                  const teamColor = evt.team === "home" ? HOME_TEAM.color : evt.team === "away" ? AWAY_TEAM.color : C.dim;
                   const isHL = favoriteTeam && evt.team === favoriteTeam && alertsEnabled;
 
                   return (
-                    <div
-                      key={evt.id}
-                      style={{
-                        display: "flex",
-                        gap: 12,
-                        padding: isGoal ? "14px 16px" : "10px 16px",
-                        borderRadius: 10,
-                        background: isGoal
-                          ? "rgba(16,185,129,.08)"
-                          : isSpecial
-                            ? C.primary + "0a"
-                            : isHL
-                              ? C.gold + "08"
-                              : C.card,
-                        border: `1px solid ${isGoal ? C.accent + "33" : isHL ? C.gold + "33" : C.cardBorder}`,
-                        animation: isNew ? "mc-slideIn .4s ease-out, mc-newEvt 2s ease-out" : undefined,
-                      }}
-                    >
-                      <div
-                        style={{
-                          minWidth: 40,
-                          textAlign: "center",
-                          fontSize: 12,
-                          fontWeight: 800,
-                          color: isSpecial ? C.primary : teamColor,
-                          paddingTop: 2,
-                        }}
-                      >
+                    <div key={evt.id} style={{
+                      display: "flex", gap: 10,
+                      padding: isGoal ? "14px 12px" : "10px 12px",
+                      borderRadius: ODS_RADIUS.lg,
+                      background: isGoal ? "rgba(16,185,129,.08)"
+                        : isSpecial ? C.magenta06
+                        : isHL ? C.magenta06 : C.card,
+                      border: `1px solid ${isGoal ? C.accent + "33" : isHL ? C.primary + "33" : C.cardBorder}`,
+                      animation: isNew ? "mc-slideIn .4s ease-out, mc-newEvt 2s ease-out" : undefined,
+                    }}>
+                      {/* Minute badge */}
+                      <div style={{
+                        minWidth: 36, textAlign: "center", fontSize: 11, fontWeight: 800,
+                        color: isSpecial ? C.primary : teamColor, paddingTop: 2, fontFamily: F,
+                      }}>
                         {isSpecial ? "—" : `${evt.minute}'`}
                       </div>
                       <EventIcon type={evt.type} />
-                      <div style={{ flex: 1 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         {evt.player && (
-                          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 2, fontFamily: F }}>
                             {evt.team === "home" ? HOME_TEAM.flag : evt.team === "away" ? AWAY_TEAM.flag : ""}{" "}
                             {evt.player}
                             {evt.assist && (
-                              <span style={{ fontWeight: 400, color: C.dim }}> (assist: {evt.assist})</span>
+                              <span style={{ fontWeight: 400, color: C.dim, fontSize: 12 }}> ({evt.assist})</span>
                             )}
                           </div>
                         )}
-                        <div
-                          style={{
-                            fontSize: isGoal ? 14 : 12,
-                            color: isGoal ? C.accent : isSpecial ? C.primary : C.dim,
-                            fontWeight: isGoal || isSpecial ? 600 : 400,
-                            lineHeight: 1.5,
-                          }}
-                        >
+                        <div style={{
+                          fontSize: isGoal ? 14 : 13, lineHeight: 1.5,
+                          color: isGoal ? C.accent : isSpecial ? C.primary : C.textSecondary,
+                          fontWeight: isGoal || isSpecial ? 600 : 400,
+                        }}>
                           {evt.detail}
                         </div>
                         {isGoal && (
-                          <div
-                            style={{
-                              marginTop: 6,
-                              fontSize: 13,
-                              fontWeight: 800,
-                              color: C.text,
-                              background: C.scoreBg,
-                              padding: "4px 12px",
-                              borderRadius: 6,
-                              display: "inline-block",
-                            }}
-                          >
+                          <div style={{
+                            marginTop: 6, fontSize: 14, fontWeight: 800, fontFamily: F,
+                            color: C.text, background: C.bgSecondary,
+                            padding: "5px 14px", borderRadius: 8, display: "inline-block",
+                          }}>
                             {HOME_TEAM.shortName}{" "}
                             {events.filter((e) => e.type === "goal" && e.team === "home" && e.id <= evt.id).length}
                             {" – "}
@@ -1550,63 +1481,119 @@ function MatchdayCompanion() {
           </div>
         )}
 
-        {/* ────────────── STATS TAB ────────────── */}
+        {/* ────────────── STATS TAB (Mobile-First) ────────────── */}
         {tab === "stats" && (
-          <div style={{ maxWidth: 550, margin: "0 auto" }}>
-            <div
-              style={{
-                background: C.card,
-                borderRadius: 14,
-                padding: 24,
-                border: `1px solid ${C.cardBorder}`,
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
-                <span style={{ fontWeight: 700 }}>
-                  {HOME_TEAM.flag} {HOME_TEAM.shortName}
-                </span>
-                <span style={{ color: C.dim, fontSize: 13, fontWeight: 600 }}>MATCH STATS</span>
-                <span style={{ fontWeight: 700 }}>
-                  {AWAY_TEAM.shortName} {AWAY_TEAM.flag}
-                </span>
+          <div style={{ maxWidth: 480, margin: "0 auto", width: "100%" }}>
+            {/* Team header — sticky on mobile scroll */}
+            <div style={{
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              padding: "12px 4px", marginBottom: 8,
+              position: "sticky", top: 0, zIndex: 5,
+              background: C.bg,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 24 }}>{HOME_TEAM.flag}</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: HOME_TEAM.color, fontFamily: ODS_FONT }}>{HOME_TEAM.shortName}</span>
               </div>
-
-              {events.length === 0 ? (
-                <div style={{ textAlign: "center", padding: 30, color: C.dim }}>
-                  Stats will appear once the match begins.
+              {events.length > 0 && (
+                <div style={{
+                  background: C.bgSecondary, borderRadius: 8, padding: "4px 14px",
+                  border: `1px solid ${C.cardBorder}`,
+                  fontSize: 18, fontWeight: 900, fontVariantNumeric: "tabular-nums",
+                  color: C.text, fontFamily: ODS_FONT,
+                }}>
+                  {homeScore} – {awayScore}
                 </div>
-              ) : (
-                <>
-                  <StatBar label="Possession" homeVal={interpStats.possession[0]} awayVal={interpStats.possession[1]} format="pct" explanation={STAT_EXPLANATIONS.possession} />
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 14, fontWeight: 800, color: AWAY_TEAM.color, fontFamily: ODS_FONT }}>{AWAY_TEAM.shortName}</span>
+                <span style={{ fontSize: 24 }}>{AWAY_TEAM.flag}</span>
+              </div>
+            </div>
+
+            {events.length === 0 ? (
+              <div style={{
+                textAlign: "center", padding: "48px 20px", color: C.textSecondary,
+                fontFamily: ODS_FONT,
+              }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>📊</div>
+                <p style={{ fontSize: 15, fontWeight: 600 }}>Waiting for kick-off…</p>
+                <p style={{ fontSize: 13 }}>Stats will appear once the match begins.</p>
+              </div>
+            ) : (
+              <>
+                {/* ── Attack ── */}
+                <div style={{
+                  background: C.card, borderRadius: ODS_RADIUS.lg,
+                  padding: "16px 16px 4px", marginBottom: 12,
+                  border: `1px solid ${C.cardBorder}`,
+                }}>
+                  <div style={{
+                    fontSize: 11, fontWeight: 700, color: C.primary,
+                    textTransform: "uppercase", letterSpacing: 1,
+                    marginBottom: 12, fontFamily: ODS_FONT,
+                    display: "flex", alignItems: "center", gap: 6,
+                  }}>
+                    <span>⚽</span> Attack
+                  </div>
                   <StatBar label="Shots" homeVal={interpStats.shots[0]} awayVal={interpStats.shots[1]} />
                   <StatBar label="Shots on Target" homeVal={interpStats.shotsOnTarget[0]} awayVal={interpStats.shotsOnTarget[1]} explanation={STAT_EXPLANATIONS.shotsOnTarget} />
                   <StatBar label="xG" homeVal={interpStats.xG[0]} awayVal={interpStats.xG[1]} format="decimal" explanation={STAT_EXPLANATIONS.xG} />
                   <StatBar label="Corners" homeVal={interpStats.corners[0]} awayVal={interpStats.corners[1]} />
-                  <StatBar label="Fouls" homeVal={interpStats.fouls[0]} awayVal={interpStats.fouls[1]} />
-                  <StatBar label="Yellow Cards" homeVal={interpStats.yellowCards[0]} awayVal={interpStats.yellowCards[1]} />
-                  <StatBar label="Red Cards" homeVal={interpStats.redCards[0]} awayVal={interpStats.redCards[1]} />
+                </div>
+
+                {/* ── Possession & Passing ── */}
+                <div style={{
+                  background: C.card, borderRadius: ODS_RADIUS.lg,
+                  padding: "16px 16px 4px", marginBottom: 12,
+                  border: `1px solid ${C.cardBorder}`,
+                }}>
+                  <div style={{
+                    fontSize: 11, fontWeight: 700, color: C.primary,
+                    textTransform: "uppercase", letterSpacing: 1,
+                    marginBottom: 12, fontFamily: ODS_FONT,
+                    display: "flex", alignItems: "center", gap: 6,
+                  }}>
+                    <span>🎯</span> Possession & Passing
+                  </div>
+                  <StatBar label="Possession" homeVal={interpStats.possession[0]} awayVal={interpStats.possession[1]} format="pct" explanation={STAT_EXPLANATIONS.possession} />
                   <StatBar label="Passes" homeVal={interpStats.passes[0]} awayVal={interpStats.passes[1]} />
                   <StatBar label="Pass Accuracy" homeVal={interpStats.passAccuracy[0]} awayVal={interpStats.passAccuracy[1]} format="pct" explanation={STAT_EXPLANATIONS.passAccuracy} />
                   <StatBar label="Offsides" homeVal={interpStats.offsides[0]} awayVal={interpStats.offsides[1]} />
-                </>
-              )}
-            </div>
+                </div>
+
+                {/* ── Discipline ── */}
+                <div style={{
+                  background: C.card, borderRadius: ODS_RADIUS.lg,
+                  padding: "16px 16px 4px", marginBottom: 12,
+                  border: `1px solid ${C.cardBorder}`,
+                }}>
+                  <div style={{
+                    fontSize: 11, fontWeight: 700, color: C.primary,
+                    textTransform: "uppercase", letterSpacing: 1,
+                    marginBottom: 12, fontFamily: ODS_FONT,
+                    display: "flex", alignItems: "center", gap: 6,
+                  }}>
+                    <span>🟡</span> Discipline
+                  </div>
+                  <StatBar label="Fouls" homeVal={interpStats.fouls[0]} awayVal={interpStats.fouls[1]} />
+                  <StatBar label="Yellow Cards" homeVal={interpStats.yellowCards[0]} awayVal={interpStats.yellowCards[1]} />
+                  <StatBar label="Red Cards" homeVal={interpStats.redCards[0]} awayVal={interpStats.redCards[1]} />
+                </div>
+              </>
+            )}
           </div>
         )}
 
-        {/* ────────────── TABLE TAB ────────────── */}
+        {/* ────────────── TABLE TAB (Mobile) ────────────── */}
         {tab === "table" && (
-          <div style={{ maxWidth: 650, margin: "0 auto" }}>
-            <div
-              style={{
-                background: C.card,
-                borderRadius: 14,
-                padding: 24,
-                border: `1px solid ${C.cardBorder}`,
-              }}
-            >
-              <StandingsTable title="Group C (Argentina's Group)" rows={GROUP_C} />
-              <StandingsTable title="Group D (France's Group)" rows={GROUP_D} />
+          <div style={{ width: "100%" }}>
+            <div style={{
+              background: C.card, borderRadius: ODS_RADIUS.lg,
+              padding: "12px 8px", border: `1px solid ${C.cardBorder}`,
+            }}>
+              <StandingsTable title="Group C (Argentina)" rows={GROUP_C} />
+              <StandingsTable title="Group D (France)" rows={GROUP_D} />
             </div>
           </div>
         )}
